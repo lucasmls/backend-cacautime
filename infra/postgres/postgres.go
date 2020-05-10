@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
 	"log"
+
+	// Needed only to emable postgres driver
+	_ "github.com/lib/pq"
 )
 
 // ClientInput ...
@@ -48,7 +50,5 @@ func (c Client) ExecuteQuery(ctx context.Context, query string, args ...interfac
 
 // Execute a query without returning any rows.
 func (c Client) Execute(ctx context.Context, query string, args ...interface{}) (driver.Result, error) {
-	fmt.Println("======")
-	fmt.Println(args...)
 	return c.db.Exec(query, args...)
 }
