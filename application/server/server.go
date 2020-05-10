@@ -1,9 +1,14 @@
 package server
 
-import "github.com/gofiber/fiber"
+import (
+	"github.com/gofiber/fiber"
+	"github.com/lucasmls/backend-cacautime/domain"
+)
 
 // ServiceInput ...
-type ServiceInput struct{}
+type ServiceInput struct {
+	CustomersRepo domain.CustomersRepository
+}
 
 // Service ...
 type Service struct {
@@ -12,6 +17,10 @@ type Service struct {
 
 // NewService ...
 func NewService(in ServiceInput) *Service {
+	if in.CustomersRepo == nil {
+		panic("Customers Repo is required.")
+	}
+
 	return &Service{
 		in: in,
 	}
@@ -20,6 +29,8 @@ func NewService(in ServiceInput) *Service {
 // Engine ...
 func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
+
+	app.Post("/customer", s.registerCustomerEndpoint)
 }
 
 // Run ...
