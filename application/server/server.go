@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gofiber/fiber"
+	requestLogger "github.com/gofiber/logger"
 	"github.com/lucasmls/backend-cacautime/domain"
 )
 
@@ -36,6 +37,8 @@ func (s Service) Engine(app *fiber.App) {
 // Run ...
 func (s Service) Run() {
 	app := fiber.New()
+
+	app.Use(requestLogger.New())
 
 	s.Engine(app)
 
