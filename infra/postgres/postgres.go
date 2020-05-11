@@ -6,7 +6,10 @@ import (
 	"database/sql/driver"
 	"log"
 
-	// Needed only to emable postgres driver
+	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/errors"
+
+	// Needed only to enable postgres driver
 	_ "github.com/lib/pq"
 )
 
@@ -24,15 +27,18 @@ type Client struct {
 }
 
 // NewClient ...
-func NewClient(in ClientInput) (*Client, error) {
+func NewClient(in ClientInput) (*Client, *infra.Error) {
+	// @TODO => Validar as entradas...
+	const opName infra.OpName = "postgres.NewClient"
+
 	db, err := sql.Open(in.Driver, in.ConnectionString)
 	if err != nil {
 		log.Panic(err)
-		return nil, err
+		return nil, errors.New(err, opName, "Failed to connect into postgres.", infra.KindBadRequest)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return nil, errors.New(err, opName, "Failed to ping postgres.", infra.KindBadRequest)
 	}
 
 	db.SetMaxOpenConns(in.MaxConnectionsOpen)

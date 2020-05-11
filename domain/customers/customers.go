@@ -18,7 +18,10 @@ type Service struct {
 }
 
 // NewService ...
-func NewService(in ServiceInput) (*Service, error) {
+func NewService(in ServiceInput) (*Service, *infra.Error) {
+	// @TODO => Validar as entradas...
+	const opName infra.OpName = "customers.NewService"
+
 	return &Service{
 		in: in,
 	}, nil

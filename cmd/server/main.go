@@ -8,6 +8,8 @@ import (
 
 	"github.com/lucasmls/backend-cacautime/application/server"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
+	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/errors"
 	"github.com/lucasmls/backend-cacautime/infra/postgres"
 )
 
@@ -18,7 +20,9 @@ type config struct {
 	dbMaxConnectionsOpen int
 }
 
-func env() (*config, error) {
+func env() (*config, *infra.Error) {
+	const opName infra.OpName = "cmd/server.env"
+
 	c := &config{
 		goEnv:              os.Getenv("GO_ENV"),
 		dbConnectionString: os.Getenv("DB_CONNECTION_STRING"),
@@ -28,7 +32,7 @@ func env() (*config, error) {
 	dbMaxConnectionsOpen, err := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS_OPEN"))
 	if err != nil {
 		log.Fatal(err)
-		return nil, err
+		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
 	c.dbMaxConnectionsOpen = dbMaxConnectionsOpen
@@ -39,7 +43,7 @@ func env() (*config, error) {
 func main() {
 	env, err := env()
 	if err != nil {
-		fmt.Print("Error when getting the environment variables.")
+		fmt.Println("Error when getting the environment variables.", err.Error())
 		return
 	}
 
