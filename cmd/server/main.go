@@ -43,6 +43,7 @@ func env() (*config, *infra.Error) {
 func main() {
 	env, err := env()
 	if err != nil {
+		// @TODO => Create the error log method
 		fmt.Println("Error when getting the environment variables.", err.Error())
 		return
 	}
@@ -67,9 +68,15 @@ func main() {
 		return
 	}
 
-	s := server.NewService(server.ServiceInput{
+	s, err := server.NewService(server.ServiceInput{
 		CustomersRepo: customers,
 	})
+
+	if err != nil {
+		// @TODO => Create the error log method
+		fmt.Println("Error when creating the server.", err.Error())
+		return
+	}
 
 	s.Run()
 }

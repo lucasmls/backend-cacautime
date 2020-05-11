@@ -4,6 +4,8 @@ import (
 	"github.com/gofiber/fiber"
 	requestLogger "github.com/gofiber/logger"
 	"github.com/lucasmls/backend-cacautime/domain"
+	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/errors"
 )
 
 // ServiceInput ...
@@ -17,14 +19,17 @@ type Service struct {
 }
 
 // NewService ...
-func NewService(in ServiceInput) *Service {
+func NewService(in ServiceInput) (*Service, *infra.Error) {
+	const opName infra.OpName = "server.NewService"
+
 	if in.CustomersRepo == nil {
-		panic("Customers Repo is required.")
+		// @TODO => Create the missing dependency error
+		return nil, errors.New(opName, "Customers Repo is required.", infra.KindBadRequest)
 	}
 
 	return &Service{
 		in: in,
-	}
+	}, nil
 }
 
 // Engine ...
