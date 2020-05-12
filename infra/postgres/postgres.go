@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"log"
 
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
@@ -41,7 +40,6 @@ func NewClient(in ClientInput) (*Client, *infra.Error) {
 
 	db, err := sql.Open("postgres", in.ConnectionString)
 	if err != nil {
-		log.Panic(err)
 		return nil, errors.New(err, opName, "Failed to connect into postgres.", infra.KindBadRequest)
 	}
 

@@ -29,7 +29,6 @@ func env() (*config, *infra.Error) {
 
 	dbMaxConnectionsOpen, err := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS_OPEN"))
 	if err != nil {
-		log.Fatal(err)
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
