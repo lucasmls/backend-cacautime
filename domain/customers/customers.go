@@ -10,7 +10,8 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Db infra.DatabaseClient
+	Db  infra.DatabaseClient
+	Log infra.LogProvider
 }
 
 // Service ...
@@ -27,6 +28,11 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
+	if in.Log == nil {
+		err := infra.MissingDependencyError{DependencyName: "LogProvider"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
 	return &Service{
 		in: in,
 	}, nil
@@ -37,6 +43,10 @@ func (s Service) Register(ctx context.Context, customer domain.Customer) error {
 	const opName infra.OpName = "customers.Register"
 
 	query := `INSERT INTO customers (name, phone) values ($1, $2)`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Registering a new customer...", infra.Metadata{
+		"customer": customer,
+	})
 
 	_, err := s.in.Db.Execute(ctx, query, customer.Name, customer.Phone)
 	if err != nil {

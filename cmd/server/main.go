@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
@@ -10,11 +9,13 @@ import (
 	"github.com/lucasmls/backend-cacautime/domain/customers"
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
+	"github.com/lucasmls/backend-cacautime/infra/log"
 	"github.com/lucasmls/backend-cacautime/infra/postgres"
 )
 
 type config struct {
-	goEnv                string
+	goEnv                infra.Environment
+	logLevel             string
 	dbConnectionString   string
 	dbMaxConnectionsOpen int
 }
@@ -23,7 +24,7 @@ func env() (*config, *infra.Error) {
 	const opName infra.OpName = "cmd/server.env"
 
 	c := &config{
-		goEnv:              os.Getenv("GO_ENV"),
+		goEnv:              infra.Environment(os.Getenv("GO_ENV")),
 		dbConnectionString: os.Getenv("DB_CONNECTION_STRING"),
 	}
 
@@ -40,10 +41,14 @@ func env() (*config, *infra.Error) {
 func main() {
 	env, err := env()
 	if err != nil {
-		// @TODO => Create the error log method
 		fmt.Println("Error when getting the environment variables.", err.Error())
 		return
 	}
+
+	log, err := log.NewClient(log.ClientInput{
+		GoEnv: infra.Environment(env.goEnv),
+		Level: infra.Severity(env.logLevel),
+	})
 
 	postgres, err := postgres.NewClient(postgres.ClientInput{
 		ConnectionString:   env.dbConnectionString,
@@ -51,16 +56,17 @@ func main() {
 	})
 
 	if err != nil {
-		log.Panic(err)
+		errors.Log(log, err)
 		return
 	}
 
 	customers, err := customers.NewService(customers.ServiceInput{
-		Db: postgres,
+		Db:  postgres,
+		Log: log,
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		errors.Log(log, err)
 		return
 	}
 
@@ -69,8 +75,7 @@ func main() {
 	})
 
 	if err != nil {
-		// @TODO => Create the error log method
-		fmt.Println("Error when creating the server.", err.Error())
+		errors.Log(log, err)
 		return
 	}
 
