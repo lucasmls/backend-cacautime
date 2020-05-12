@@ -25,6 +25,23 @@ const (
 	SeverityDebug Severity = "Debug"
 )
 
+// Environment ...
+type Environment string
+
+const (
+	// EnvironmentDevelop ...
+	EnvironmentDevelop Environment = "development"
+	// EnvironmentProduction ...
+	EnvironmentProduction Environment = "production"
+	// EnvironmentStaging ...
+	EnvironmentStaging Environment = "staging"
+)
+
+const (
+	// IDContextValueKey ...
+	IDContextValueKey string = "contextID"
+)
+
 // ErrorKind ...
 type ErrorKind int
 
