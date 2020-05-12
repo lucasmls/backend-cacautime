@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
 
@@ -67,4 +68,32 @@ type Error struct {
 // Error ...
 func (e Error) Error() string {
 	return e.Err.Error()
+}
+
+// MissingEnvironmentVariableError ...
+type MissingEnvironmentVariableError struct {
+	EnvVarName string
+}
+
+func (e MissingEnvironmentVariableError) Error() string {
+	return fmt.Sprintf("missing required environment variable: %s", e.EnvVarName)
+}
+
+// MissingDependencyError ...
+type MissingDependencyError struct {
+	DependencyName string
+}
+
+func (e MissingDependencyError) Error() string {
+	return fmt.Sprintf("missing required dependency: %s", e.DependencyName)
+}
+
+// MinimumValueError ...
+type MinimumValueError struct {
+	EnvVarName      string
+	MinimumRequired int
+}
+
+func (e MinimumValueError) Error() string {
+	return fmt.Sprintf("missing value: %s - minimum required: %d", e.EnvVarName, e.MinimumRequired)
 }
