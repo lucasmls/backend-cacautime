@@ -5,6 +5,7 @@ import (
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/errors"
 )
 
 // ServiceInput ...
@@ -19,8 +20,12 @@ type Service struct {
 
 // NewService ...
 func NewService(in ServiceInput) (*Service, *infra.Error) {
-	// @TODO => Validar as entradas...
 	const opName infra.OpName = "customers.NewService"
+
+	if in.Db == nil {
+		err := infra.MissingDependencyError{DependencyName: "DatabaseClient"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
 
 	return &Service{
 		in: in,

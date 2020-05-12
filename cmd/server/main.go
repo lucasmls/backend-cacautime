@@ -15,7 +15,6 @@ import (
 
 type config struct {
 	goEnv                string
-	dbDriver             string
 	dbConnectionString   string
 	dbMaxConnectionsOpen int
 }
@@ -26,7 +25,6 @@ func env() (*config, *infra.Error) {
 	c := &config{
 		goEnv:              os.Getenv("GO_ENV"),
 		dbConnectionString: os.Getenv("DB_CONNECTION_STRING"),
-		dbDriver:           os.Getenv("DB_DRIVER"),
 	}
 
 	dbMaxConnectionsOpen, err := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS_OPEN"))
@@ -50,7 +48,6 @@ func main() {
 
 	postgres, err := postgres.NewClient(postgres.ClientInput{
 		ConnectionString:   env.dbConnectionString,
-		Driver:             env.dbDriver,
 		MaxConnectionsOpen: env.dbMaxConnectionsOpen,
 	})
 

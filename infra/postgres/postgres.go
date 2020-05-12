@@ -15,7 +15,6 @@ import (
 
 // ClientInput ...
 type ClientInput struct {
-	Driver             string
 	ConnectionString   string
 	MaxConnectionsOpen int
 }
@@ -28,10 +27,19 @@ type Client struct {
 
 // NewClient ...
 func NewClient(in ClientInput) (*Client, *infra.Error) {
-	// @TODO => Validar as entradas...
 	const opName infra.OpName = "postgres.NewClient"
 
-	db, err := sql.Open(in.Driver, in.ConnectionString)
+	if in.ConnectionString == "" {
+		err := infra.MissingDependencyError{DependencyName: "ConnectionString"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
+	if in.MaxConnectionsOpen < 1 {
+		err := infra.MinimumValueError{EnvVarName: "MaxConnectionsOpen", MinimumRequired: 1}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
+	db, err := sql.Open("postgres", in.ConnectionString)
 	if err != nil {
 		log.Panic(err)
 		return nil, errors.New(err, opName, "Failed to connect into postgres.", infra.KindBadRequest)

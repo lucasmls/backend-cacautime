@@ -23,8 +23,8 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 	const opName infra.OpName = "server.NewService"
 
 	if in.CustomersRepo == nil {
-		// @TODO => Create the missing dependency error
-		return nil, errors.New(opName, "Customers Repo is required.", infra.KindBadRequest)
+		err := infra.MissingDependencyError{DependencyName: "CustomersRepo"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
 	return &Service{

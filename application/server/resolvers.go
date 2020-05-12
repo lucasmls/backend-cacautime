@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber"
 	"github.com/lucasmls/backend-cacautime/domain"
+	"github.com/lucasmls/backend-cacautime/infra"
 )
 
 func (s Service) pingEndpoint(c *fiber.Ctx) {
@@ -14,12 +15,13 @@ func (s Service) pingEndpoint(c *fiber.Ctx) {
 }
 
 func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.registerCustomerEndpoint"
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
 	customer := domain.Customer{}
 	if err := c.BodyParser(&customer); err != nil {
-		fmt.Println(err)
 		return
 	}
 
