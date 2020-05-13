@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/lucasmls/backend-cacautime/application/server"
+	"github.com/lucasmls/backend-cacautime/domain/candies"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
 	"github.com/lucasmls/backend-cacautime/domain/duties"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -86,9 +87,20 @@ func main() {
 		return
 	}
 
+	candiesR, err := candies.NewService(candies.ServiceInput{
+		Db:  postgres,
+		Log: log,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	s, err := server.NewService(server.ServiceInput{
 		CustomersRepo: customers,
 		DutiesRepo:    duties,
+		CandiesRepo:   candiesR,
 	})
 
 	if err != nil {

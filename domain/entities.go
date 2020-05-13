@@ -17,3 +17,10 @@ type Duty struct {
 	Date          string         `json:"date"`
 	CandyQuantity int            `json:"candyQuantity"`
 }
+
+// Candy ...
+type Candy struct {
+	ID    infra.ObjectID `json:"id"`
+	Name  string         `json:"name"`
+	Price int            `json:"price"`
+}
