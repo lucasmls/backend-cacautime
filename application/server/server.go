@@ -43,6 +43,8 @@ func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
 
 	app.Post("/customer", s.registerCustomerEndpoint)
+
+	app.Get("/duty", s.listDutiesEndpoint)
 	app.Post("/duty", s.registerDutyEndpoint)
 }
 

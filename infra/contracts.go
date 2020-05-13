@@ -7,7 +7,7 @@ import (
 )
 
 // ObjectID represents a document identifier
-type ObjectID string
+type ObjectID int
 
 // DatabaseClient ...
 type DatabaseClient interface {

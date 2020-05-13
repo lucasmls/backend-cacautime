@@ -67,3 +67,19 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 		},
 	)
 }
+
+func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.listDutiesEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	duties, err := s.in.DutiesRepo.List(ctx)
+	if err != nil {
+		// @TODO => Criar o canal de error e inserir o erro lá...
+		fmt.Println(err)
+		return
+	}
+
+	c.Status(200).JSON(duties)
+}

@@ -9,5 +9,6 @@ type CustomersRepository interface {
 
 // DutiesRepository ...
 type DutiesRepository interface {
+	List(context.Context) ([]Duty, error)
 	Register(context.Context, Duty) error
 }

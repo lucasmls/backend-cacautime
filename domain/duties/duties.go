@@ -55,3 +55,36 @@ func (s Service) Register(ctx context.Context, duty domain.Duty) error {
 
 	return nil
 }
+
+// List ...
+func (s Service) List(ctx context.Context) ([]domain.Duty, error) {
+	const opName infra.OpName = "duties.List"
+
+	query := `SELECT * from duties`
+
+	s.in.Log.Info(ctx, opName, "Listing all duties...")
+
+	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	defer result.Close()
+
+	var duties []domain.Duty
+
+	for result.Next() {
+		duty := domain.Duty{}
+		if err := result.Scan(&duty.ID, &duty.Date, &duty.CandyQuantity); err != nil {
+			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+		}
+
+		duties = append(duties, duty)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	return duties, nil
+}
