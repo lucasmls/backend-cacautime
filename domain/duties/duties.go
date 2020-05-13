@@ -60,7 +60,7 @@ func (s Service) Register(ctx context.Context, duty domain.Duty) error {
 func (s Service) List(ctx context.Context) ([]domain.Duty, error) {
 	const opName infra.OpName = "duties.List"
 
-	query := `SELECT * from duties`
+	query := `SELECT id, date, candy_quantity from duties`
 
 	s.in.Log.Info(ctx, opName, "Listing all duties...")
 
