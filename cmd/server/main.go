@@ -7,6 +7,7 @@ import (
 
 	"github.com/lucasmls/backend-cacautime/application/server"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
+	"github.com/lucasmls/backend-cacautime/domain/duties"
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
 	"github.com/lucasmls/backend-cacautime/infra/log"
@@ -50,6 +51,11 @@ func main() {
 		Level: infra.Severity(env.logLevel),
 	})
 
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	postgres, err := postgres.NewClient(postgres.ClientInput{
 		ConnectionString:   env.dbConnectionString,
 		MaxConnectionsOpen: env.dbMaxConnectionsOpen,
@@ -70,8 +76,19 @@ func main() {
 		return
 	}
 
+	duties, err := duties.NewService(duties.ServiceInput{
+		Db:  postgres,
+		Log: log,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	s, err := server.NewService(server.ServiceInput{
 		CustomersRepo: customers,
+		DutiesRepo:    duties,
 	})
 
 	if err != nil {

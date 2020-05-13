@@ -11,6 +11,7 @@ import (
 // ServiceInput ...
 type ServiceInput struct {
 	CustomersRepo domain.CustomersRepository
+	DutiesRepo    domain.DutiesRepository
 }
 
 // Service ...
@@ -27,6 +28,11 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
+	if in.DutiesRepo == nil {
+		err := infra.MissingDependencyError{DependencyName: "DutiesRepo"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
 	return &Service{
 		in: in,
 	}, nil
@@ -37,6 +43,7 @@ func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
 
 	app.Post("/customer", s.registerCustomerEndpoint)
+	app.Post("/duty", s.registerDutyEndpoint)
 }
 
 // Run ...
