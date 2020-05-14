@@ -1,0 +1,49 @@
+package domain
+
+import "github.com/lucasmls/backend-cacautime/infra"
+
+// RawDutyResult ...
+type RawDutyResult struct {
+	ID       infra.ObjectID `json:"duty_id"`
+	Date     string         `json:"duty_date"`
+	Quantity int            `json:"duty_qtd"`
+
+	SaleID            infra.ObjectID `json:"sale_id"`
+	SaleStatus        string         `json:"sale_status"`
+	SalePaymentMethod string         `json:"sale_payment_method"`
+
+	CandyID    infra.ObjectID `json:"candy_id"`
+	CandyName  string         `json:"candy_name"`
+	CandyPrice int            `json:"candy_price"`
+
+	CustomerID    infra.ObjectID `json:"customer_id"`
+	CustomerName  string         `json:"customer_name"`
+	CustomerPhone string         `json:"customer_phone"`
+}
+
+// SaleResult ...
+type SaleResult struct {
+	ID            infra.ObjectID `json:"id"`
+	CandyID       infra.ObjectID `json:"candy_id"`
+	CandyName     string         `json:"candy_name"`
+	CandyPrice    int            `json:"candy_price"`
+	CustomerID    infra.ObjectID `json:"customer_id"`
+	CustomerName  string         `json:"customer_name"`
+	CustomerPhone string         `json:"customer_phone"`
+	PaymentMethod string         `json:"payment_method"`
+	Status        string         `json:"status"`
+}
+
+// DutyResult ...
+type DutyResult struct {
+	ID              infra.ObjectID `json:"id"`
+	Date            string         `json:"date"`
+	Quantity        int            `json:"quantity"`
+	Subtotal        int            `json:"subtotal"`
+	PaidAmount      int            `json:"paid_amount"`
+	ScheduledAmount int            `json:"scheduled_amount"`
+	Sales           []SaleResult   `json:"sales"`
+}
+
+// DutiesResult ...
+type DutiesResult map[infra.ObjectID]DutyResult
