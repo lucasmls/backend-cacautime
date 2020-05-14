@@ -39,7 +39,7 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 }
 
 // Register ...
-func (s Service) Register(ctx context.Context, candy domain.Candy) error {
+func (s Service) Register(ctx context.Context, candy domain.Candy) *infra.Error {
 	const opName infra.OpName = "candies.Register"
 
 	query := `INSERT INTO candies (name, price) values ($1, $2)`

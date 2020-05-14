@@ -1,19 +1,23 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"github.com/lucasmls/backend-cacautime/infra"
+)
 
 // CustomersRepository ...
 type CustomersRepository interface {
-	Register(context.Context, Customer) error
+	Register(context.Context, Customer) *infra.Error
 }
 
 // DutiesRepository ...
 type DutiesRepository interface {
-	List(context.Context) ([]Duty, error)
-	Register(context.Context, Duty) error
+	List(context.Context) ([]Duty, *infra.Error)
+	Register(context.Context, Duty) *infra.Error
 }
 
 // CandiesRepository ...
 type CandiesRepository interface {
-	Register(context.Context, Candy) error
+	Register(context.Context, Candy) *infra.Error
 }

@@ -39,7 +39,7 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 }
 
 // Register ...
-func (s Service) Register(ctx context.Context, duty domain.Duty) error {
+func (s Service) Register(ctx context.Context, duty domain.Duty) *infra.Error {
 	const opName infra.OpName = "duties.Register"
 
 	query := `INSERT INTO duties (date, candy_quantity) values ($1, $2)`
@@ -57,7 +57,7 @@ func (s Service) Register(ctx context.Context, duty domain.Duty) error {
 }
 
 // List ...
-func (s Service) List(ctx context.Context) ([]domain.Duty, error) {
+func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 	const opName infra.OpName = "duties.List"
 
 	query := `SELECT id, date, candy_quantity from duties`
@@ -88,3 +88,6 @@ func (s Service) List(ctx context.Context) ([]domain.Duty, error) {
 
 	return duties, nil
 }
+
+// Sales ...
+// func (s Service) Sales(ctx context.Context) ([]domain.DutySalesResult, *infra.Error)
