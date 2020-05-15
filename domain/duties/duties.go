@@ -89,9 +89,9 @@ func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 	return duties, nil
 }
 
-// Sales ...
-func (s Service) Sales(ctx context.Context) (domain.DutiesResult, *infra.Error) {
-	const opName infra.OpName = "duties.Sales"
+// Consolidate ...
+func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *infra.Error) {
+	const opName infra.OpName = "duties.Consolidate"
 
 	query := `
 		SELECT
@@ -117,84 +117,85 @@ func (s Service) Sales(ctx context.Context) (domain.DutiesResult, *infra.Error) 
 			INNER JOIN candies ca on s.candy_id = ca.id
 	`
 
-	s.in.Log.Info(ctx, opName, "Listing the sales of the duties...")
+	s.in.Log.Info(ctx, opName, "Consolidating the sales of the duties...")
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	dbResult, err := s.in.Db.ExecuteQuery(ctx, query)
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	defer result.Close()
+	defer dbResult.Close()
 
-	var dutiesSalesResult []domain.RawDutyResult
+	var sales []domain.SaleRow
 
-	for result.Next() {
-		duty := domain.RawDutyResult{}
-		if err := result.Scan(
-			&duty.ID,
-			&duty.Date,
-			&duty.Quantity,
-			&duty.SaleID,
-			&duty.SaleStatus,
-			&duty.SalePaymentMethod,
-			&duty.CandyID,
-			&duty.CandyName,
-			&duty.CandyPrice,
-			&duty.CustomerID,
-			&duty.CustomerName,
-			&duty.CustomerPhone,
+	for dbResult.Next() {
+		sale := domain.SaleRow{}
+
+		if err := dbResult.Scan(
+			&sale.DutyID,
+			&sale.DutyDate,
+			&sale.DutyQuantity,
+			&sale.ID,
+			&sale.Status,
+			&sale.PaymentMethod,
+			&sale.CandyID,
+			&sale.CandyName,
+			&sale.CandyPrice,
+			&sale.CustomerID,
+			&sale.CustomerName,
+			&sale.CustomerPhone,
 		); err != nil {
 			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 		}
 
-		dutiesSalesResult = append(dutiesSalesResult, duty)
+		sales = append(sales, sale)
 	}
 
-	if err := result.Err(); err != nil {
+	if err := dbResult.Err(); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	dutiesResult := make(domain.DutiesResult)
+	consolidatedDuties := make(domain.ConsolidatedDuties)
 
-	for _, duty := range dutiesSalesResult {
-		var dutyResult domain.DutyResult
+	for _, sale := range sales {
+		var duty domain.ConsolidatedDuty
 
-		if foundResult, ok := dutiesResult[duty.ID]; !ok {
-			dutyResult = domain.DutyResult{
-				ID:       duty.ID,
-				Date:     duty.Date,
-				Quantity: duty.Quantity,
-			}
+		if foundDuty, ok := consolidatedDuties[sale.DutyID]; ok {
+			duty = foundDuty
 		} else {
-			dutyResult = foundResult
+			duty = domain.ConsolidatedDuty{
+				ID:       sale.DutyID,
+				Date:     sale.DutyDate,
+				Quantity: sale.DutyQuantity,
+			}
 		}
 
-		if dutyResult.Sales == nil {
-			dutyResult.Sales = []domain.SaleResult{}
+		if duty.Sales == nil {
+			duty.Sales = []domain.DutySale{}
 		}
 
-		dutyResult.Sales = append(dutyResult.Sales, domain.SaleResult{
-			ID:            duty.SaleID,
-			CandyID:       duty.CandyID,
-			CandyName:     duty.CandyName,
-			CandyPrice:    duty.CandyPrice,
-			CustomerID:    duty.CustomerID,
-			CustomerName:  duty.CustomerName,
-			CustomerPhone: duty.CustomerPhone,
-			PaymentMethod: duty.SalePaymentMethod,
-			Status:        duty.SaleStatus,
+		duty.Sales = append(duty.Sales, domain.DutySale{
+			ID:            sale.ID,
+			CandyID:       sale.CandyID,
+			CandyName:     sale.CandyName,
+			CandyPrice:    sale.CandyPrice,
+			CustomerID:    sale.CustomerID,
+			CustomerName:  sale.CustomerName,
+			CustomerPhone: sale.CustomerPhone,
+			PaymentMethod: sale.PaymentMethod,
+			Status:        sale.Status,
 		})
 
-		dutyResult.Subtotal = 0
-		dutyResult.PaidAmount = 0
-		dutyResult.ScheduledAmount = 0
+		duty.Subtotal = 0
+		duty.PaidAmount = 0
+		duty.ScheduledAmount = 0
 
-		dutiesResult[duty.ID] = dutyResult
+		consolidatedDuties[sale.DutyID] = duty
 	}
 
-	s.in.Log.InfoMetadata(ctx, opName, "Resultado do plantão...", infra.Metadata{
-		"result": dutiesResult,
+	s.in.Log.InfoMetadata(ctx, opName, "Consolidated duties...", infra.Metadata{
+		"duties": consolidatedDuties,
 	})
 
-	return dutiesResult, nil
+	return consolidatedDuties, nil
 }

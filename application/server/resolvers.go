@@ -90,7 +90,7 @@ func (s Service) listDutiesSales(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	dutiesSales, err := s.in.DutiesRepo.Sales(ctx)
+	dutiesSales, err := s.in.DutiesRepo.Consolidate(ctx)
 	if err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
