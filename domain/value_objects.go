@@ -2,6 +2,16 @@ package domain
 
 import "github.com/lucasmls/backend-cacautime/infra"
 
+// Status ...
+type Status string
+
+const (
+	// Paid ...
+	Paid Status = "paid"
+	// NotPaid ...
+	NotPaid Status = "not_paid"
+)
+
 // SaleRow ...
 type SaleRow struct {
 	DutyID       infra.ObjectID `json:"duty_id"`
@@ -9,7 +19,7 @@ type SaleRow struct {
 	DutyQuantity int            `json:"duty_qtd"`
 
 	ID            infra.ObjectID `json:"sale_id"`
-	Status        string         `json:"sale_status"`
+	Status        Status         `json:"sale_status"`
 	PaymentMethod string         `json:"sale_payment_method"`
 
 	CandyID    infra.ObjectID `json:"candy_id"`
@@ -31,7 +41,7 @@ type DutySale struct {
 	CustomerName  string         `json:"customer_name"`
 	CustomerPhone string         `json:"customer_phone"`
 	PaymentMethod string         `json:"payment_method"`
-	Status        string         `json:"status"`
+	Status        Status         `json:"status"`
 }
 
 // ConsolidatedDuty ...

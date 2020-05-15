@@ -188,11 +188,11 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 
 		duty.Subtotal += sale.CandyPrice
 
-		if sale.Status == "paid" {
+		if sale.Status == domain.Paid {
 			duty.PaidAmount += sale.CandyPrice
 		}
 
-		if sale.Status == "not_paid" {
+		if sale.Status == domain.NotPaid {
 			duty.ScheduledAmount += sale.CandyPrice
 		}
 
