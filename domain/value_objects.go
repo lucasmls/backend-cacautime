@@ -12,6 +12,18 @@ const (
 	NotPaid Status = "not_paid"
 )
 
+// PaymentMethod ...
+type PaymentMethod string
+
+const (
+	// Money ...
+	Money PaymentMethod = "money"
+	// Transfer ...
+	Transfer PaymentMethod = "transfer"
+	// Scheduled ...
+	Scheduled PaymentMethod = "scheduled"
+)
+
 // SaleRow ...
 type SaleRow struct {
 	DutyID       infra.ObjectID `json:"duty_id"`
@@ -20,7 +32,7 @@ type SaleRow struct {
 
 	ID            infra.ObjectID `json:"sale_id"`
 	Status        Status         `json:"sale_status"`
-	PaymentMethod string         `json:"sale_payment_method"`
+	PaymentMethod PaymentMethod  `json:"sale_payment_method"`
 
 	CandyID    infra.ObjectID `json:"candy_id"`
 	CandyName  string         `json:"candy_name"`
@@ -40,7 +52,7 @@ type DutySale struct {
 	CustomerID    infra.ObjectID `json:"customer_id"`
 	CustomerName  string         `json:"customer_name"`
 	CustomerPhone string         `json:"customer_phone"`
-	PaymentMethod string         `json:"payment_method"`
+	PaymentMethod PaymentMethod  `json:"payment_method"`
 	Status        Status         `json:"status"`
 }
 

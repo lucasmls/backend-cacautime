@@ -126,3 +126,30 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 		},
 	)
 }
+
+func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.registerSaleEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	sale := domain.Sale{}
+	if err := c.BodyParser(&sale); err != nil {
+		// @TODO => Criar o canal de error e inserir o erro lá...
+		fmt.Println(err)
+		return
+	}
+
+	err := s.in.SalesRepo.Register(ctx, sale)
+	if err != nil {
+		// @TODO => Criar o canal de error e inserir o erro lá...
+		fmt.Println(err)
+		return
+	}
+
+	c.Status(200).JSON(
+		map[string]string{
+			"message": "Sale registered successfully.",
+		},
+	)
+}

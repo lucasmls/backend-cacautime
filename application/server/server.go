@@ -13,6 +13,7 @@ type ServiceInput struct {
 	CustomersRepo domain.CustomersRepository
 	DutiesRepo    domain.DutiesRepository
 	CandiesRepo   domain.CandiesRepository
+	SalesRepo     domain.SalesRepository
 }
 
 // Service ...
@@ -50,6 +51,8 @@ func (s Service) Engine(app *fiber.App) {
 	app.Get("/duty/sales", s.listDutiesSales)
 
 	app.Post("/candy", s.registerCandyEndpoint)
+
+	app.Post("/sale", s.registerSaleEndpoint)
 }
 
 // Run ...

@@ -9,6 +9,7 @@ import (
 	"github.com/lucasmls/backend-cacautime/domain/candies"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
 	"github.com/lucasmls/backend-cacautime/domain/duties"
+	"github.com/lucasmls/backend-cacautime/domain/sales"
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
 	"github.com/lucasmls/backend-cacautime/infra/log"
@@ -97,10 +98,21 @@ func main() {
 		return
 	}
 
+	salesR, err := sales.NewService(sales.ServiceInput{
+		Db:  postgres,
+		Log: log,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	s, err := server.NewService(server.ServiceInput{
 		CustomersRepo: customers,
 		DutiesRepo:    duties,
 		CandiesRepo:   candiesR,
+		SalesRepo:     salesR,
 	})
 
 	if err != nil {
