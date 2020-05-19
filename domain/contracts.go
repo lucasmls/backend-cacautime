@@ -22,6 +22,7 @@ type DutiesRepository interface {
 // CandiesRepository ...
 type CandiesRepository interface {
 	Register(context.Context, Candy) *infra.Error
+	List(context.Context) ([]Candy, *infra.Error)
 }
 
 // SalesRepository ...
