@@ -9,6 +9,7 @@ import (
 // CustomersRepository ...
 type CustomersRepository interface {
 	Register(context.Context, Customer) *infra.Error
+	List(context.Context) ([]Customer, *infra.Error)
 }
 
 // DutiesRepository ...

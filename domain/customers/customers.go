@@ -55,3 +55,36 @@ func (s Service) Register(ctx context.Context, customer domain.Customer) *infra.
 
 	return nil
 }
+
+// List ...
+func (s Service) List(ctx context.Context) ([]domain.Customer, *infra.Error) {
+	const opName infra.OpName = "customers.List"
+
+	query := `SELECT id, name, phone from customers`
+
+	s.in.Log.Info(ctx, opName, "Listing all customers...")
+
+	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	defer result.Close()
+
+	var customers []domain.Customer
+
+	for result.Next() {
+		customer := domain.Customer{}
+		if err := result.Scan(&customer.ID, &customer.Name, &customer.Phone); err != nil {
+			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+		}
+
+		customers = append(customers, customer)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	return customers, nil
+}

@@ -41,6 +41,22 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	)
 }
 
+func (s Service) listCustomersEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.listCustomersEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	customers, err := s.in.CustomersRepo.List(ctx)
+	if err != nil {
+		// @TODO => Criar o canal de error e inserir o erro lá...
+		fmt.Println(err)
+		return
+	}
+
+	c.Status(200).JSON(customers)
+}
+
 func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.registerDutyEndpoint"
 
