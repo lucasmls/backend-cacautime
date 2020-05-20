@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gofiber/cors"
 	"github.com/gofiber/fiber"
 	requestLogger "github.com/gofiber/logger"
 	"github.com/lucasmls/backend-cacautime/domain"
@@ -62,6 +63,7 @@ func (s Service) Run() {
 	app := fiber.New()
 
 	app.Use(requestLogger.New())
+	app.Use(cors.New())
 
 	s.Engine(app)
 
