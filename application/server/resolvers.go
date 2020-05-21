@@ -122,14 +122,14 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	candy := domain.Candy{}
-	if err := c.BodyParser(&candy); err != nil {
+	candyDto := domain.Candy{}
+	if err := c.BodyParser(&candyDto); err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	err := s.in.CandiesRepo.Register(ctx, candy)
+	candy, err := s.in.CandiesRepo.Register(ctx, candyDto)
 	if err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
@@ -137,8 +137,10 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 	}
 
 	c.Status(200).JSON(
-		map[string]string{
-			"message": "Candy registered successfully.",
+		map[string]interface{}{
+			"id":    candy.ID,
+			"name":  candy.Name,
+			"price": candy.Price,
 		},
 	)
 }

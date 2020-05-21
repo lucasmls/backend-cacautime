@@ -39,21 +39,33 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 }
 
 // Register ...
-func (s Service) Register(ctx context.Context, candy domain.Candy) *infra.Error {
+func (s Service) Register(ctx context.Context, candyDto domain.Candy) (*domain.Candy, *infra.Error) {
 	const opName infra.OpName = "candies.Register"
 
-	query := `INSERT INTO candies (name, price) values ($1, $2)`
+	query := `INSERT INTO candies (name, price) values ($1, $2) RETURNING id, name, price`
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new candy...", infra.Metadata{
-		"candy": candy,
+		"candy": candyDto,
 	})
 
-	_, err := s.in.Db.Execute(ctx, query, candy.Name, candy.Price)
+	result, err := s.in.Db.ExecuteQuery(ctx, query, candyDto.Name, candyDto.Price)
+	defer result.Close()
+
 	if err != nil {
-		return errors.New(ctx, opName, err, infra.KindUnexpected)
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	return nil
+	result.Next()
+	candy := domain.Candy{}
+	if err := result.Scan(&candy.ID, &candy.Name, &candy.Price); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	return &candy, nil
 }
 
 // List ...
@@ -65,11 +77,11 @@ func (s Service) List(ctx context.Context) ([]domain.Candy, *infra.Error) {
 	s.in.Log.Info(ctx, opName, "Listing all candies...")
 
 	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	defer result.Close()
+
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
-
-	defer result.Close()
 
 	var candies []domain.Candy
 
