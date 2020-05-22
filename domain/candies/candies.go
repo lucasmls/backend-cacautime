@@ -56,12 +56,12 @@ func (s Service) Register(ctx context.Context, candyDto domain.Candy) (*domain.C
 	}
 
 	result.Next()
-	candy := domain.Candy{}
-	if err := result.Scan(&candy.ID, &candy.Name, &candy.Price); err != nil {
+	if err := result.Err(); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	if err := result.Err(); err != nil {
+	candy := domain.Candy{}
+	if err := result.Scan(&candy.ID, &candy.Name, &candy.Price); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
