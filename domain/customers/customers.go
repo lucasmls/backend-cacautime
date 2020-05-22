@@ -39,21 +39,33 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 }
 
 // Register ...
-func (s Service) Register(ctx context.Context, customer domain.Customer) *infra.Error {
+func (s Service) Register(ctx context.Context, customerDto domain.Customer) (*domain.Customer, *infra.Error) {
 	const opName infra.OpName = "customers.Register"
 
-	query := `INSERT INTO customers (name, phone) values ($1, $2)`
+	query := `INSERT INTO customers (name, phone) values ($1, $2) RETURNING id, name, phone`
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new customer...", infra.Metadata{
-		"customer": customer,
+		"customer": customerDto,
 	})
 
-	_, err := s.in.Db.Execute(ctx, query, customer.Name, customer.Phone)
+	result, err := s.in.Db.ExecuteQuery(ctx, query, customerDto.Name, customerDto.Phone)
 	if err != nil {
-		return errors.New(ctx, opName, err, infra.KindUnexpected)
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	return nil
+	defer result.Close()
+
+	result.Next()
+	if err := result.Err(); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+	}
+
+	customer := domain.Customer{}
+	if err := result.Scan(&customer.ID, &customer.Name, &customer.Phone); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	return &customer, nil
 }
 
 // List ...

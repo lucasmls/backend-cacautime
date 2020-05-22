@@ -20,14 +20,14 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	customer := domain.Customer{}
-	if err := c.BodyParser(&customer); err != nil {
+	customerDto := domain.Customer{}
+	if err := c.BodyParser(&customerDto); err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	err := s.in.CustomersRepo.Register(ctx, customer)
+	customer, err := s.in.CustomersRepo.Register(ctx, customerDto)
 	if err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
@@ -35,8 +35,10 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	}
 
 	c.Status(200).JSON(
-		map[string]string{
-			"message": "Customer registered successfully.",
+		map[string]interface{}{
+			"id":    customer.ID,
+			"name":  customer.Name,
+			"phone": customer.Phone,
 		},
 	)
 }
