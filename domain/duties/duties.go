@@ -99,22 +99,22 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 			d.date as duty_date,
 			d.candy_quantity as duty_candy_qtd,
 
-			s.id as sale_id,
-			s.status as sale_status,
-			s.payment_method as sale_payment_method,
+			COALESCE(s.id, 0) as sale_id,
+			COALESCE(s.status,'not_paid') as sale_status,
+			COALESCE(s.payment_method, 'transfer') as sale_payment_method,
 			
-			ca.id as candy_id,
-			ca.name as candy_name,
-			ca.price as candy_price,
+			COALESCE(ca.id, 0) as candy_id,
+			COALESCE(ca.name, '') as candy_name,
+			COALESCE(ca.price, 0) as candy_price,
 			
-			cu.id as customer_id,
-			cu.name as customer_name,
-			cu.phone as customer_phone
-		
+			COALESCE(cu.id, 0) as customer_id,
+			COALESCE(cu.name, '') as customer_name,
+			COALESCE(cu.phone, '') as customer_phone
+
 		FROM duties d
-			INNER JOIN sales s on d.id = s.duty_id
-			INNER JOIN customers cu on s.customer_id = cu.id
-			INNER JOIN candies ca on s.candy_id = ca.id
+			LEFT JOIN sales s on d.id = s.duty_id
+			LEFT JOIN customers cu on s.customer_id = cu.id
+			LEFT JOIN candies ca on s.candy_id = ca.id
 	`
 
 	s.in.Log.Info(ctx, opName, "Consolidating the sales of the duties...")
@@ -172,6 +172,11 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 
 		if duty.Sales == nil {
 			duty.Sales = []domain.DutySale{}
+		}
+
+		if sale.ID == 0 {
+			consolidatedDuties[sale.DutyID] = duty
+			continue
 		}
 
 		duty.Sales = append(duty.Sales, domain.DutySale{
