@@ -16,7 +16,7 @@ type CustomersRepository interface {
 type DutiesRepository interface {
 	List(context.Context) ([]Duty, *infra.Error)
 	Register(context.Context, Duty) *infra.Error
-	Consolidate(context.Context) (ConsolidatedDuties, *infra.Error)
+	Consolidate(context.Context) ([]ConsolidatedDuty, *infra.Error)
 }
 
 // CandiesRepository ...

@@ -90,7 +90,7 @@ func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 }
 
 // Consolidate ...
-func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *infra.Error) {
+func (s Service) Consolidate(ctx context.Context) ([]domain.ConsolidatedDuty, *infra.Error) {
 	const opName infra.OpName = "duties.Consolidate"
 
 	query := `
@@ -155,12 +155,12 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	consolidatedDuties := make(domain.ConsolidatedDuties)
+	consolidatedDutiesMap := make(domain.ConsolidatedDuties)
 
 	for _, sale := range sales {
 		var duty domain.ConsolidatedDuty
 
-		if foundDuty, ok := consolidatedDuties[sale.DutyID]; ok {
+		if foundDuty, ok := consolidatedDutiesMap[sale.DutyID]; ok {
 			duty = foundDuty
 		} else {
 			duty = domain.ConsolidatedDuty{
@@ -175,7 +175,7 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 		}
 
 		if sale.ID == 0 {
-			consolidatedDuties[sale.DutyID] = duty
+			consolidatedDutiesMap[sale.DutyID] = duty
 			continue
 		}
 
@@ -201,7 +201,12 @@ func (s Service) Consolidate(ctx context.Context) (domain.ConsolidatedDuties, *i
 			duty.ScheduledAmount += sale.CandyPrice
 		}
 
-		consolidatedDuties[sale.DutyID] = duty
+		consolidatedDutiesMap[sale.DutyID] = duty
+	}
+
+	consolidatedDuties := []domain.ConsolidatedDuty{}
+	for _, duty := range consolidatedDutiesMap {
+		consolidatedDuties = append(consolidatedDuties, duty)
 	}
 
 	s.in.Log.InfoMetadata(ctx, opName, "Consolidated duties...", infra.Metadata{
