@@ -60,6 +60,11 @@ func (c Client) ExecuteQuery(ctx context.Context, query string, args ...interfac
 	return c.db.Query(query, args...)
 }
 
+// ExecuteQueryRow fetch query returning only one row.
+func (c Client) ExecuteQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return c.db.QueryRow(query, args...)
+}
+
 // Execute a query without returning any rows.
 func (c Client) Execute(ctx context.Context, query string, args ...interface{}) (driver.Result, error) {
 	return c.db.Exec(query, args...)
