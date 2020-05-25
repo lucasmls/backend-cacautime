@@ -173,23 +173,19 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	sale := domain.Sale{}
-	if err := c.BodyParser(&sale); err != nil {
+	saleDTO := domain.Sale{}
+	if err := c.BodyParser(&saleDTO); err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	err := s.in.SalesRepo.Register(ctx, sale)
+	sale, err := s.in.SalesRepo.Register(ctx, saleDTO)
 	if err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	c.Status(200).JSON(
-		map[string]string{
-			"message": "Sale registered successfully.",
-		},
-	)
+	c.Status(200).JSON(sale)
 }
