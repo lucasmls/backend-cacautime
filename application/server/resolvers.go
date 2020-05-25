@@ -148,13 +148,7 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 		return
 	}
 
-	c.Status(200).JSON(
-		map[string]interface{}{
-			"id":    candy.ID,
-			"name":  candy.Name,
-			"price": candy.Price,
-		},
-	)
+	c.Status(200).JSON(candy)
 }
 
 func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
