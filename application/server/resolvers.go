@@ -94,8 +94,8 @@ func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(duties)
 }
 
-func (s Service) listDutiesSales(c *fiber.Ctx) {
-	const opName infra.OpName = "server.listDutiesSales"
+func (s Service) listDutySales(c *fiber.Ctx) {
+	const opName infra.OpName = "server.listDutySales"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
