@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber"
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/errors"
 )
 
 func (s Service) pingEndpoint(c *fiber.Ctx) {
@@ -108,10 +110,28 @@ func (s Service) listDutiesSales(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	dutiesSales, err := s.in.DutiesRepo.Consolidate(ctx)
+	dutyIDParam := c.Params("id")
+	dutyID, err := strconv.Atoi(dutyIDParam)
 	if err != nil {
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid duty id.",
+		})
+
+		return
+	}
+
+	dutiesSales, sErr := s.in.DutiesRepo.Sales(ctx, infra.ObjectID(dutyID))
+	if sErr != nil && errors.Kind(sErr) == infra.KindNotFound {
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified duty was not found",
+		})
+
+		return
+	}
+
+	if sErr != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		fmt.Println(sErr)
 		return
 	}
 

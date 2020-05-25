@@ -2,6 +2,8 @@ package duties
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -89,129 +91,120 @@ func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 	return duties, nil
 }
 
-// Consolidate ...
-func (s Service) Consolidate(ctx context.Context) ([]domain.ConsolidatedDuty, *infra.Error) {
-	const opName infra.OpName = "duties.Consolidate"
+// Find ...
+func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty, *infra.Error) {
+	const opName infra.OpName = "duties.Find"
 
 	query := `
 		SELECT
-			d.id as duty_id,
-			d.date as duty_date,
-			d.candy_quantity as duty_candy_qtd,
-
-			COALESCE(s.id, 0) as sale_id,
-			COALESCE(s.status,'not_paid') as sale_status,
-			COALESCE(s.payment_method, 'transfer') as sale_payment_method,
-			
-			COALESCE(ca.id, 0) as candy_id,
-			COALESCE(ca.name, '') as candy_name,
-			COALESCE(ca.price, 0) as candy_price,
-			
-			COALESCE(cu.id, 0) as customer_id,
-			COALESCE(cu.name, '') as customer_name,
-			COALESCE(cu.phone, '') as customer_phone
-
-		FROM duties d
-			LEFT JOIN sales s on d.id = s.duty_id
-			LEFT JOIN customers cu on s.customer_id = cu.id
-			LEFT JOIN candies ca on s.candy_id = ca.id
+			du.id as id,
+			du.date as date,
+			du.candy_quantity as quantity
+		FROM
+			duties du
+		WHERE id = $1
 	`
 
-	s.in.Log.Info(ctx, opName, "Consolidating the sales of the duties...")
+	s.in.Log.Info(ctx, opName, "Fetching the duty...")
 
-	dbResult, err := s.in.Db.ExecuteQuery(ctx, query)
+	duty := domain.Duty{}
+	err := s.in.Db.ExecuteQueryRow(ctx, query, dutyID).Scan(
+		&duty.ID,
+		&duty.Date,
+		&duty.CandyQuantity,
+	)
+
+	if err != nil && err == sql.ErrNoRows {
+		return nil, errors.New(ctx, opName, err, infra.KindNotFound)
+	}
+
 	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+	}
+
+	fmt.Println("===")
+	fmt.Println(duty)
+	fmt.Println("===")
+
+	return &duty, nil
+}
+
+// Sales ...
+func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.DutySales, *infra.Error) {
+	const opName infra.OpName = "duties.Sales"
+
+	s.in.Log.Info(ctx, opName, "Fetching the duty sales...")
+
+	duty, err := s.Find(ctx, dutyID)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	query := `
+		SELECT
+			s.id as id,
+			s.status as status,
+			s.payment_method as payment_method,
+			
+			cu.id as customer_id,
+			cu.name as customer_name,
+
+			ca.id as candy_id,
+			ca.name as candy_name,
+			ca.price as candy_price
+		FROM
+			sales s
+			INNER JOIN customers cu ON s.customer_id = cu.id
+			INNER JOIN candies ca ON s.candy_id = ca.id
+		WHERE
+			s.duty_id = $1
+	`
+
+	dbResult, dbErr := s.in.Db.ExecuteQuery(ctx, query, dutyID)
+	if dbErr != nil {
+		return nil, errors.New(ctx, opName, dbErr, infra.KindBadRequest)
 	}
 
 	defer dbResult.Close()
 
-	var sales []domain.SaleRow
+	dutySales := domain.DutySales{
+		ID:              duty.ID,
+		Date:            duty.Date,
+		Quantity:        duty.CandyQuantity,
+		PaidAmount:      0,
+		ScheduledAmount: 0,
+		Subtotal:        0,
+		Sales:           []domain.DutySale{},
+	}
 
 	for dbResult.Next() {
-		sale := domain.SaleRow{}
+		sale := domain.DutySale{}
 
 		if err := dbResult.Scan(
-			&sale.DutyID,
-			&sale.DutyDate,
-			&sale.DutyQuantity,
 			&sale.ID,
 			&sale.Status,
 			&sale.PaymentMethod,
+			&sale.CustomerID,
+			&sale.CustomerName,
 			&sale.CandyID,
 			&sale.CandyName,
 			&sale.CandyPrice,
-			&sale.CustomerID,
-			&sale.CustomerName,
-			&sale.CustomerPhone,
 		); err != nil {
-			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+			return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
 		}
 
-		sales = append(sales, sale)
-	}
+		dutySales.Sales = append(dutySales.Sales, sale)
 
-	if err := dbResult.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
-	consolidatedDutiesMap := make(domain.ConsolidatedDuties)
-
-	for _, sale := range sales {
-		var duty domain.ConsolidatedDuty
-
-		if foundDuty, ok := consolidatedDutiesMap[sale.DutyID]; ok {
-			duty = foundDuty
-		} else {
-			duty = domain.ConsolidatedDuty{
-				ID:       sale.DutyID,
-				Date:     sale.DutyDate,
-				Quantity: sale.DutyQuantity,
-			}
-		}
-
-		if duty.Sales == nil {
-			duty.Sales = []domain.DutySale{}
-		}
-
-		if sale.ID == 0 {
-			consolidatedDutiesMap[sale.DutyID] = duty
-			continue
-		}
-
-		duty.Sales = append(duty.Sales, domain.DutySale{
-			ID:            sale.ID,
-			CandyID:       sale.CandyID,
-			CandyName:     sale.CandyName,
-			CandyPrice:    sale.CandyPrice,
-			CustomerID:    sale.CustomerID,
-			CustomerName:  sale.CustomerName,
-			CustomerPhone: sale.CustomerPhone,
-			PaymentMethod: sale.PaymentMethod,
-			Status:        sale.Status,
-		})
-
-		duty.Subtotal += sale.CandyPrice
+		dutySales.Subtotal += sale.CandyPrice
 
 		if sale.Status == domain.Paid {
-			duty.PaidAmount += sale.CandyPrice
+			dutySales.PaidAmount += sale.CandyPrice
 		}
 
 		if sale.Status == domain.NotPaid {
-			duty.ScheduledAmount += sale.CandyPrice
+			dutySales.ScheduledAmount += sale.CandyPrice
 		}
-
-		consolidatedDutiesMap[sale.DutyID] = duty
 	}
 
-	consolidatedDuties := []domain.ConsolidatedDuty{}
-	for _, duty := range consolidatedDutiesMap {
-		consolidatedDuties = append(consolidatedDuties, duty)
-	}
-
-	s.in.Log.InfoMetadata(ctx, opName, "Consolidated duties...", infra.Metadata{
-		"duties": consolidatedDuties,
-	})
-
-	return consolidatedDuties, nil
+	return &dutySales, nil
 }
