@@ -61,25 +61,21 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	duty := domain.Duty{}
-	if err := c.BodyParser(&duty); err != nil {
+	dutyDTO := domain.Duty{}
+	if err := c.BodyParser(&dutyDTO); err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	err := s.in.DutiesRepo.Register(ctx, duty)
+	duty, err := s.in.DutiesRepo.Register(ctx, dutyDTO)
 	if err != nil {
 		// @TODO => Criar o canal de error e inserir o erro lá...
 		fmt.Println(err)
 		return
 	}
 
-	c.Status(200).JSON(
-		map[string]string{
-			"message": "Duty registered successfully.",
-		},
-	)
+	c.Status(200).JSON(duty)
 }
 
 func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
