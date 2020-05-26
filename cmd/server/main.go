@@ -104,7 +104,7 @@ func main() {
 	}
 
 	candiesR, err := candies.NewService(candies.ServiceInput{
-		Db:  postgres,
+		Db:  postgrex,
 		Log: log,
 	})
 

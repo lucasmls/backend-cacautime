@@ -10,7 +10,7 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Db  infra.DatabaseClient
+	Db  infra.RelationalDatabaseProvider
 	Log infra.LogProvider
 }
 
@@ -24,12 +24,12 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 	const opName infra.OpName = "candies.NewService"
 
 	if in.Db == nil {
-		err := infra.MissingDependencyError{DependencyName: "DatabaseClient"}
+		err := infra.MissingDependencyError{DependencyName: "Db"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
 	if in.Log == nil {
-		err := infra.MissingDependencyError{DependencyName: "LogProvider"}
+		err := infra.MissingDependencyError{DependencyName: "Log"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
@@ -48,20 +48,9 @@ func (s Service) Register(ctx context.Context, candyDto domain.Candy) (*domain.C
 		"candy": candyDto,
 	})
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query, candyDto.Name, candyDto.Price)
-	defer result.Close()
-
-	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
-	result.Next()
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
+	decoder := s.in.Db.Query(ctx, query, candyDto.Name, candyDto.Price)
 	candy := domain.Candy{}
-	if err := result.Scan(&candy.ID, &candy.Name, &candy.Price); err != nil {
+	if err := decoder.Decode(ctx, &candy); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
@@ -76,8 +65,8 @@ func (s Service) List(ctx context.Context) ([]domain.Candy, *infra.Error) {
 
 	s.in.Log.Info(ctx, opName, "Listing all candies...")
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query)
-	defer result.Close()
+	cursor, err := s.in.Db.QueryAll(ctx, query)
+	defer cursor.Close(ctx)
 
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
@@ -85,17 +74,13 @@ func (s Service) List(ctx context.Context) ([]domain.Candy, *infra.Error) {
 
 	var candies []domain.Candy
 
-	for result.Next() {
+	for cursor.Next(ctx) {
 		candy := domain.Candy{}
-		if err := result.Scan(&candy.ID, &candy.Name, &candy.Price); err != nil {
+		if err := cursor.Decode(ctx, &candy); err != nil {
 			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 		}
 
 		candies = append(candies, candy)
-	}
-
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
 	return candies, nil
