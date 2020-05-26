@@ -11,9 +11,8 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Log      infra.LogProvider
-	Db       infra.DatabaseClient
-	Database infra.RelationalDatabaseProvider
+	Log infra.LogProvider
+	Db  infra.RelationalDatabaseProvider
 }
 
 // Service ...
@@ -35,11 +34,6 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
-	if in.Database == nil {
-		err := infra.MissingDependencyError{DependencyName: "Database"}
-		return nil, errors.New(err, opName, infra.KindBadRequest)
-	}
-
 	return &Service{
 		in: in,
 	}, nil
@@ -49,26 +43,17 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Register(ctx context.Context, dutyDTO domain.Duty) (*domain.Duty, *infra.Error) {
 	const opName infra.OpName = "duties.Register"
 
-	query := `INSERT INTO duties (date, candy_quantity) values ($1, $2) RETURNING id, candy_quantity, date`
+	query := `INSERT INTO duties (date, candy_quantity) values ($1, $2) RETURNING id, date, candy_quantity as candyQuantity`
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new duty...", infra.Metadata{
 		"duty": dutyDTO,
 	})
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query, dutyDTO.Date, dutyDTO.CandyQuantity)
-	defer result.Close()
-
-	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
-	result.Next()
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
+	decoder := s.in.Db.Query(ctx, query, dutyDTO.Date, dutyDTO.CandyQuantity)
 
 	duty := domain.Duty{}
-	if err := result.Scan(&duty.ID, &duty.CandyQuantity, &duty.Date); err != nil {
+
+	if err := decoder.Decode(ctx, &duty); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
@@ -79,30 +64,26 @@ func (s Service) Register(ctx context.Context, dutyDTO domain.Duty) (*domain.Dut
 func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 	const opName infra.OpName = "duties.List"
 
-	query := `SELECT id, date, candy_quantity from duties`
+	query := `SELECT id, date, candy_quantity as candyQuantity from duties`
 
 	s.in.Log.Info(ctx, opName, "Listing all duties...")
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	cursor, err := s.in.Db.QueryAll(ctx, query)
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	defer result.Close()
+	defer cursor.Close(ctx)
 
 	var duties []domain.Duty
 
-	for result.Next() {
+	for cursor.Next(ctx) {
 		duty := domain.Duty{}
-		if err := result.Scan(&duty.ID, &duty.Date, &duty.CandyQuantity); err != nil {
+		if err := cursor.Decode(ctx, &duty); err != nil {
 			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 		}
 
 		duties = append(duties, duty)
-	}
-
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
 	return duties, nil
@@ -124,7 +105,7 @@ func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty,
 
 	s.in.Log.Info(ctx, opName, "Fetching the duty...")
 
-	decoder := s.in.Database.Query(ctx, query, dutyID)
+	decoder := s.in.Db.Query(ctx, query, dutyID)
 
 	duty := domain.Duty{}
 	err := decoder.Decode(ctx, &duty)
@@ -171,7 +152,7 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 			s.duty_id = $1
 	`
 
-	cursor, dbErr := s.in.Database.QueryAll(ctx, query, dutyID)
+	cursor, dbErr := s.in.Db.QueryAll(ctx, query, dutyID)
 	if dbErr != nil {
 		return nil, errors.New(ctx, opName, dbErr, infra.KindBadRequest)
 	}

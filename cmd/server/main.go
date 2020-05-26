@@ -94,9 +94,8 @@ func main() {
 	}
 
 	duties, err := duties.NewService(duties.ServiceInput{
-		Db:       postgres,
-		Log:      log,
-		Database: postgrex,
+		Log: log,
+		Db:  postgrex,
 	})
 
 	if err != nil {
