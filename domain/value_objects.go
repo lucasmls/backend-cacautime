@@ -28,14 +28,14 @@ const (
 type DutySale struct {
 	ID            infra.ObjectID `json:"id"`
 	Status        Status         `json:"status"`
-	PaymentMethod PaymentMethod  `json:"payment_method"`
+	PaymentMethod PaymentMethod  `json:"paymentMethod"`
 
-	CandyID    infra.ObjectID `json:"candy_id"`
-	CandyName  string         `json:"candy_name"`
-	CandyPrice int            `json:"candy_price"`
+	CandyID    infra.ObjectID `json:"candyId"`
+	CandyName  string         `json:"candyName"`
+	CandyPrice int            `json:"candyPrice"`
 
-	CustomerID   infra.ObjectID `json:"customer_id"`
-	CustomerName string         `json:"customer_name"`
+	CustomerID   infra.ObjectID `json:"customerId"`
+	CustomerName string         `json:"customerName"`
 }
 
 // DutySales ...
@@ -45,8 +45,8 @@ type DutySales struct {
 	Quantity int            `json:"quantity"`
 
 	Subtotal        int `json:"subtotal"`
-	PaidAmount      int `json:"paid_amount"`
-	ScheduledAmount int `json:"scheduled_amount"`
+	PaidAmount      int `json:"paidAmount"`
+	ScheduledAmount int `json:"scheduledAmount"`
 
 	Sales []DutySale `json:"sales"`
 }
