@@ -2,19 +2,11 @@ package infra
 
 import (
 	"context"
-	"database/sql"
 	"database/sql/driver"
 )
 
 // ObjectID represents a document identifier
 type ObjectID int
-
-// DatabaseClient ...
-type DatabaseClient interface {
-	ExecuteQuery(context.Context, string, ...interface{}) (*sql.Rows, error)
-	ExecuteQueryRow(context.Context, string, ...interface{}) *sql.Row
-	Execute(context.Context, string, ...interface{}) (driver.Result, error)
-}
 
 // LogProvider ...
 type LogProvider interface {
