@@ -28,9 +28,9 @@ type Candy struct {
 // Sale ...
 type Sale struct {
 	ID            infra.ObjectID `json:"id"`
-	CustomerID    infra.ObjectID `json:"customer_id"`
-	DutyID        infra.ObjectID `json:"duty_id"`
-	CandyID       infra.ObjectID `json:"candy_id"`
+	CustomerID    infra.ObjectID `json:"customerId"`
+	DutyID        infra.ObjectID `json:"dutyId"`
+	CandyID       infra.ObjectID `json:"candyId"`
 	Status        Status         `json:"status"`
-	PaymentMethod PaymentMethod  `json:"payment_method"`
+	PaymentMethod PaymentMethod  `json:"paymentMethod"`
 }
