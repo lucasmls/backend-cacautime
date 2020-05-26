@@ -15,6 +15,7 @@ import (
 	"github.com/lucasmls/backend-cacautime/infra/errors"
 	"github.com/lucasmls/backend-cacautime/infra/log"
 	"github.com/lucasmls/backend-cacautime/infra/postgres"
+	"github.com/lucasmls/backend-cacautime/infra/postgrex"
 )
 
 type config struct {
@@ -71,6 +72,17 @@ func main() {
 		return
 	}
 
+	postgrex, err := postgrex.NewClient(postgrex.ClientInput{
+		Log:                log,
+		ConnectionString:   env.dbConnectionString,
+		MaxConnectionsOpen: env.dbMaxConnectionsOpen,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	customers, err := customers.NewService(customers.ServiceInput{
 		Db:  postgres,
 		Log: log,
@@ -82,8 +94,9 @@ func main() {
 	}
 
 	duties, err := duties.NewService(duties.ServiceInput{
-		Db:  postgres,
-		Log: log,
+		Db:       postgres,
+		Log:      log,
+		Database: postgrex,
 	})
 
 	if err != nil {

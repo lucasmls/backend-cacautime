@@ -34,3 +34,23 @@ type LogProvider interface {
 	Debugf(context.Context, OpName, string, ...interface{})
 	DebugMetadata(context.Context, OpName, string, Metadata)
 }
+
+// RelationalDatabaseProvider ...
+type RelationalDatabaseProvider interface {
+	Query(context.Context, string, ...interface{}) Decoder
+}
+
+// Entity represents an abstraction of an entity in database
+type Entity interface{}
+
+// Cursor ...
+type Cursor interface {
+	Next(context.Context) bool
+	Decode(context.Context, Entity) *Error
+	Close(context.Context) *Error
+}
+
+// Decoder ...
+type Decoder interface {
+	Decode(context.Context, Entity) *Error
+}

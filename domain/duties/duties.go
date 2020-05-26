@@ -3,7 +3,6 @@ package duties
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -12,8 +11,9 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Db  infra.DatabaseClient
-	Log infra.LogProvider
+	Log      infra.LogProvider
+	Db       infra.DatabaseClient
+	Database infra.RelationalDatabaseProvider
 }
 
 // Service ...
@@ -25,13 +25,18 @@ type Service struct {
 func NewService(in ServiceInput) (*Service, *infra.Error) {
 	const opName infra.OpName = "duties.NewService"
 
-	if in.Db == nil {
-		err := infra.MissingDependencyError{DependencyName: "DatabaseClient"}
+	if in.Log == nil {
+		err := infra.MissingDependencyError{DependencyName: "Log"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
-	if in.Log == nil {
-		err := infra.MissingDependencyError{DependencyName: "LogProvider"}
+	if in.Db == nil {
+		err := infra.MissingDependencyError{DependencyName: "Db"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
+	if in.Database == nil {
+		err := infra.MissingDependencyError{DependencyName: "Database"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
@@ -111,7 +116,7 @@ func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty,
 		SELECT
 			du.id as id,
 			du.date as date,
-			du.candy_quantity as quantity
+			du.candy_quantity as candyQuantity
 		FROM
 			duties du
 		WHERE id = $1
@@ -119,12 +124,10 @@ func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty,
 
 	s.in.Log.Info(ctx, opName, "Fetching the duty...")
 
+	decoder := s.in.Database.Query(ctx, query, dutyID)
+
 	duty := domain.Duty{}
-	err := s.in.Db.ExecuteQueryRow(ctx, query, dutyID).Scan(
-		&duty.ID,
-		&duty.Date,
-		&duty.CandyQuantity,
-	)
+	err := decoder.Decode(ctx, &duty)
 
 	if err != nil && err == sql.ErrNoRows {
 		return nil, errors.New(ctx, opName, err, infra.KindNotFound)
@@ -133,10 +136,6 @@ func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty,
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
 	}
-
-	fmt.Println("===")
-	fmt.Println(duty)
-	fmt.Println("===")
 
 	return &duty, nil
 }
