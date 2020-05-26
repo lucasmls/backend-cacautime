@@ -10,7 +10,7 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Db  infra.DatabaseClient
+	Db  infra.RelationalDatabaseProvider
 	Log infra.LogProvider
 }
 
@@ -24,12 +24,12 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 	const opName infra.OpName = "sales.NewService"
 
 	if in.Db == nil {
-		err := infra.MissingDependencyError{DependencyName: "DatabaseClient"}
+		err := infra.MissingDependencyError{DependencyName: "Db"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
 	if in.Log == nil {
-		err := infra.MissingDependencyError{DependencyName: "LogProvider"}
+		err := infra.MissingDependencyError{DependencyName: "Log"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
@@ -42,26 +42,16 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Register(ctx context.Context, saleDTO domain.Sale) (*domain.Sale, *infra.Error) {
 	const opName infra.OpName = "sales.Register"
 
-	query := `INSERT INTO sales (customer_id, duty_id, candy_id, status, payment_method) values ($1, $2, $3, $4, $5) RETURNING id, customer_id, duty_id, candy_id, status, payment_method`
+	query := `INSERT INTO sales (customer_id, duty_id, candy_id, status, payment_method) values ($1, $2, $3, $4, $5) RETURNING id, customer_id as customerId, duty_id as dutyId, candy_id as candyId, status, payment_method as paymentMethod`
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new sale...", infra.Metadata{
 		"sale": saleDTO,
 	})
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query, saleDTO.CustomerID, saleDTO.DutyID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod)
-	defer result.Close()
-
-	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
-	result.Next()
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
+	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.DutyID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod)
 	sale := domain.Sale{}
-	if err := result.Scan(&sale.ID, &sale.CustomerID, &sale.DutyID, &sale.CandyID, &sale.Status, &sale.PaymentMethod); err != nil {
+
+	if err := decoder.Decode(ctx, &sale); err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 

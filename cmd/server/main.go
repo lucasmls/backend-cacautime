@@ -14,7 +14,6 @@ import (
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
 	"github.com/lucasmls/backend-cacautime/infra/log"
-	"github.com/lucasmls/backend-cacautime/infra/postgres"
 	"github.com/lucasmls/backend-cacautime/infra/postgrex"
 )
 
@@ -55,16 +54,6 @@ func main() {
 	log, err := log.NewClient(log.ClientInput{
 		GoEnv: infra.Environment(env.goEnv),
 		Level: infra.Severity(env.logLevel),
-	})
-
-	if err != nil {
-		errors.Log(log, err)
-		return
-	}
-
-	postgres, err := postgres.NewClient(postgres.ClientInput{
-		ConnectionString:   env.dbConnectionString,
-		MaxConnectionsOpen: env.dbMaxConnectionsOpen,
 	})
 
 	if err != nil {
@@ -114,7 +103,7 @@ func main() {
 	}
 
 	salesR, err := sales.NewService(sales.ServiceInput{
-		Db:  postgres,
+		Db:  postgrex,
 		Log: log,
 	})
 
