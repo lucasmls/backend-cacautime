@@ -2,6 +2,7 @@ package postgrex
 
 import (
 	"context"
+	"database/sql/driver"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -60,7 +61,7 @@ func NewClient(in ClientInput) (*Client, *infra.Error) {
 	}, nil
 }
 
-// Query ...
+// Query - Executes a query that return only one row
 func (c Client) Query(ctx context.Context, query string, args ...interface{}) infra.Decoder {
 	const opName infra.OpName = "postgres.Query"
 
@@ -74,7 +75,7 @@ func (c Client) Query(ctx context.Context, query string, args ...interface{}) in
 	return decoder{row: row}
 }
 
-// QueryAll ...
+// QueryAll - Executes a query that returns many rows
 func (c Client) QueryAll(ctx context.Context, query string, args ...interface{}) (infra.Cursor, *infra.Error) {
 	const opName infra.OpName = "postgres.QueryAll"
 
@@ -89,4 +90,19 @@ func (c Client) QueryAll(ctx context.Context, query string, args ...interface{})
 	}
 
 	return cursor{rows: rows}, nil
+}
+
+// Execute a query that return no row(s)
+func (c Client) Execute(ctx context.Context, query string, args ...interface{}) (driver.Result, *infra.Error) {
+	const opName infra.OpName = "postgres.Execute"
+
+	result, err := c.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, errors.New(ctx, err, opName, infra.Metadata{
+			"query": query,
+			"args":  args,
+		})
+	}
+
+	return result, nil
 }
