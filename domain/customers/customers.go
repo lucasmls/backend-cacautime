@@ -10,7 +10,7 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
-	Db  infra.DatabaseClient
+	Db  infra.RelationalDatabaseProvider
 	Log infra.LogProvider
 }
 
@@ -48,21 +48,11 @@ func (s Service) Register(ctx context.Context, customerDto domain.Customer) (*do
 		"customer": customerDto,
 	})
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query, customerDto.Name, customerDto.Phone)
-	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
-	}
-
-	defer result.Close()
-
-	result.Next()
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
-	}
+	decoder := s.in.Db.Query(ctx, query, customerDto.Name, customerDto.Phone)
 
 	customer := domain.Customer{}
-	if err := result.Scan(&customer.ID, &customer.Name, &customer.Phone); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	if err := decoder.Decode(ctx, &customer); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
 	}
 
 	return &customer, nil
@@ -76,26 +66,22 @@ func (s Service) List(ctx context.Context) ([]domain.Customer, *infra.Error) {
 
 	s.in.Log.Info(ctx, opName, "Listing all customers...")
 
-	result, err := s.in.Db.ExecuteQuery(ctx, query)
+	cursor, err := s.in.Db.QueryAll(ctx, query)
 	if err != nil {
 		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
-	defer result.Close()
+	defer cursor.Close(ctx)
 
 	var customers []domain.Customer
 
-	for result.Next() {
+	for cursor.Next(ctx) {
 		customer := domain.Customer{}
-		if err := result.Scan(&customer.ID, &customer.Name, &customer.Phone); err != nil {
+		if err := cursor.Decode(ctx, &customer); err != nil {
 			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 		}
 
 		customers = append(customers, customer)
-	}
-
-	if err := result.Err(); err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
 	}
 
 	return customers, nil

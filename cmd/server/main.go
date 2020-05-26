@@ -84,7 +84,7 @@ func main() {
 	}
 
 	customers, err := customers.NewService(customers.ServiceInput{
-		Db:  postgres,
+		Db:  postgrex,
 		Log: log,
 	})
 
