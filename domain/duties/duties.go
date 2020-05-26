@@ -155,14 +155,14 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 		SELECT
 			s.id as id,
 			s.status as status,
-			s.payment_method as payment_method,
+			s.payment_method as paymentMethod,
 			
-			cu.id as customer_id,
-			cu.name as customer_name,
+			cu.id as customerId,
+			cu.name as customerName,
 
-			ca.id as candy_id,
-			ca.name as candy_name,
-			ca.price as candy_price
+			ca.id as candyId,
+			ca.name as candyName,
+			ca.price as candyPrice
 		FROM
 			sales s
 			INNER JOIN customers cu ON s.customer_id = cu.id
@@ -171,12 +171,12 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 			s.duty_id = $1
 	`
 
-	dbResult, dbErr := s.in.Db.ExecuteQuery(ctx, query, dutyID)
+	cursor, dbErr := s.in.Database.QueryAll(ctx, query, dutyID)
 	if dbErr != nil {
 		return nil, errors.New(ctx, opName, dbErr, infra.KindBadRequest)
 	}
 
-	defer dbResult.Close()
+	defer cursor.Close(ctx)
 
 	dutySales := domain.DutySales{
 		ID:              duty.ID,
@@ -188,19 +188,9 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 		Sales:           []domain.DutySale{},
 	}
 
-	for dbResult.Next() {
+	for cursor.Next(ctx) {
 		sale := domain.DutySale{}
-
-		if err := dbResult.Scan(
-			&sale.ID,
-			&sale.Status,
-			&sale.PaymentMethod,
-			&sale.CustomerID,
-			&sale.CustomerName,
-			&sale.CandyID,
-			&sale.CandyName,
-			&sale.CandyPrice,
-		); err != nil {
+		if err := cursor.Decode(ctx, &sale); err != nil {
 			return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
 		}
 

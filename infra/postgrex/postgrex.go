@@ -73,3 +73,20 @@ func (c Client) Query(ctx context.Context, query string, args ...interface{}) in
 
 	return decoder{row: row}
 }
+
+// QueryAll ...
+func (c Client) QueryAll(ctx context.Context, query string, args ...interface{}) (infra.Cursor, *infra.Error) {
+	const opName infra.OpName = "postgres.QueryAll"
+
+	c.in.Log.DebugMetadata(ctx, opName, "Executing query...", infra.Metadata{
+		"query": query,
+		"args":  args,
+	})
+
+	rows, err := c.db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, errors.New(ctx, err, opName)
+	}
+
+	return cursor{rows: rows}, nil
+}

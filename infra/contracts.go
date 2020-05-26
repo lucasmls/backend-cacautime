@@ -38,6 +38,7 @@ type LogProvider interface {
 // RelationalDatabaseProvider ...
 type RelationalDatabaseProvider interface {
 	Query(context.Context, string, ...interface{}) Decoder
+	QueryAll(context.Context, string, ...interface{}) (Cursor, *Error)
 }
 
 // Entity represents an abstraction of an entity in database
