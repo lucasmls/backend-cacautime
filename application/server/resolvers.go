@@ -22,16 +22,23 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	customerDto := domain.Customer{}
-	if err := c.BodyParser(&customerDto); err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
+	customerDTO := domain.Customer{}
+	if err := c.BodyParser(&customerDTO); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": customerDTO,
+		})
+
 		fmt.Println(err)
 		return
 	}
 
-	customer, err := s.in.CustomersRepo.Register(ctx, customerDto)
+	customer, err := s.in.CustomersRepo.Register(ctx, customerDTO)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": customerDTO,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		fmt.Println(err)
 		return
 	}
@@ -47,8 +54,9 @@ func (s Service) listCustomersEndpoint(c *fiber.Ctx) {
 
 	customers, err := s.in.CustomersRepo.List(ctx)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName)
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
@@ -63,14 +71,22 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 
 	dutyDTO := domain.Duty{}
 	if err := c.BodyParser(&dutyDTO); err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": dutyDTO,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		fmt.Println(err)
 		return
 	}
 
 	duty, err := s.in.DutiesRepo.Register(ctx, dutyDTO)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": dutyDTO,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		fmt.Println(err)
 		return
 	}
@@ -86,8 +102,9 @@ func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
 
 	duties, err := s.in.DutiesRepo.List(ctx)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName)
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
@@ -103,6 +120,10 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 	dutyIDParam := c.Params("id")
 	dutyID, err := strconv.Atoi(dutyIDParam)
 	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
 		c.Status(422).JSON(map[string]interface{}{
 			"message": "Invalid duty id.",
 		})
@@ -112,6 +133,10 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 
 	dutiesSales, sErr := s.in.DutiesRepo.Sales(ctx, infra.ObjectID(dutyID))
 	if sErr != nil && errors.Kind(sErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
 		c.Status(404).JSON(map[string]interface{}{
 			"message": "The specified duty was not found",
 		})
@@ -120,8 +145,11 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 	}
 
 	if sErr != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(sErr)
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
@@ -136,15 +164,21 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 
 	candyDto := domain.Candy{}
 	if err := c.BodyParser(&candyDto); err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": candyDto,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
 	candy, err := s.in.CandiesRepo.Register(ctx, candyDto)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": candyDto,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
@@ -159,8 +193,9 @@ func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
 
 	candies, err := s.in.CandiesRepo.List(ctx)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName)
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
@@ -175,15 +210,21 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 
 	saleDTO := domain.Sale{}
 	if err := c.BodyParser(&saleDTO); err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": saleDTO,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 
 	sale, err := s.in.SalesRepo.Register(ctx, saleDTO)
 	if err != nil {
-		// @TODO => Criar o canal de error e inserir o erro lá...
-		fmt.Println(err)
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": saleDTO,
+		})
+
+		// @TODO => Retornar o erro de dominio...
 		return
 	}
 

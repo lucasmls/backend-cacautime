@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -42,6 +43,8 @@ func env() (*config, *infra.Error) {
 }
 
 func main() {
+	ctx := context.Background()
+
 	env, err := env()
 	if err != nil {
 		fmt.Println("Error when getting the environment variables.", err.Error())
@@ -120,5 +123,9 @@ func main() {
 		return
 	}
 
-	s.Run()
+	ch := s.Run(ctx)
+	for err := range ch {
+		errors.Log(log, err)
+		// @TODO -> Add some monitoring metrics here and in the whole application.
+	}
 }

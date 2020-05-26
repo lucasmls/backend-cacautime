@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/gofiber/cors"
 	"github.com/gofiber/fiber"
 	requestLogger "github.com/gofiber/logger"
@@ -19,7 +21,8 @@ type ServiceInput struct {
 
 // Service ...
 type Service struct {
-	in ServiceInput
+	in    ServiceInput
+	errCh chan *infra.Error
 }
 
 // NewService ...
@@ -37,7 +40,8 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 	}
 
 	return &Service{
-		in: in,
+		in:    in,
+		errCh: make(chan *infra.Error),
 	}, nil
 }
 
@@ -59,7 +63,9 @@ func (s Service) Engine(app *fiber.App) {
 }
 
 // Run ...
-func (s Service) Run() {
+func (s Service) Run(ctx context.Context) <-chan *infra.Error {
+	const opName infra.OpName = "server.Run"
+
 	app := fiber.New()
 
 	app.Use(requestLogger.New())
@@ -67,5 +73,14 @@ func (s Service) Run() {
 
 	s.Engine(app)
 
-	app.Listen(3000)
+	go func() {
+		if err := app.Listen(3000); err != nil {
+			s.errCh <- errors.New(opName, err, infra.KindUnexpected)
+		}
+
+		close(s.errCh)
+	}()
+
+	// s.in.Log.Info(ctx, opName, "Server up and running...")
+	return s.errCh
 }
