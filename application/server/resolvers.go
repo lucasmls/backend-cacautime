@@ -28,7 +28,6 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 			"payload": customerDTO,
 		})
 
-		fmt.Println(err)
 		return
 	}
 
@@ -39,7 +38,6 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 		})
 
 		// @TODO => Retornar o erro de dominio...
-		fmt.Println(err)
 		return
 	}
 
@@ -87,7 +85,6 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 		})
 
 		// @TODO => Retornar o erro de dominio...
-		fmt.Println(err)
 		return
 	}
 
@@ -145,7 +142,7 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 	}
 
 	if sErr != nil {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
 			"param": dutyIDParam,
 		})
 
