@@ -112,6 +112,7 @@ func main() {
 	}
 
 	s, err := server.NewService(server.ServiceInput{
+		Log:           log,
 		CustomersRepo: customers,
 		DutiesRepo:    duties,
 		CandiesRepo:   candiesR,

@@ -13,6 +13,7 @@ import (
 
 // ServiceInput ...
 type ServiceInput struct {
+	Log           infra.LogProvider
 	CustomersRepo domain.CustomersRepository
 	DutiesRepo    domain.DutiesRepository
 	CandiesRepo   domain.CandiesRepository
@@ -28,6 +29,11 @@ type Service struct {
 // NewService ...
 func NewService(in ServiceInput) (*Service, *infra.Error) {
 	const opName infra.OpName = "server.NewService"
+
+	if in.Log == nil {
+		err := infra.MissingDependencyError{DependencyName: "Log"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
 
 	if in.CustomersRepo == nil {
 		err := infra.MissingDependencyError{DependencyName: "CustomersRepo"}
@@ -81,6 +87,6 @@ func (s Service) Run(ctx context.Context) <-chan *infra.Error {
 		close(s.errCh)
 	}()
 
-	// s.in.Log.Info(ctx, opName, "Server up and running...")
+	s.in.Log.Info(ctx, opName, "Server up and running...")
 	return s.errCh
 }
