@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -59,6 +58,12 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 			"payload": payload,
 		})
 
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
 		return
 	}
 
@@ -85,7 +90,12 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 			"payload": customerDTO,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -102,7 +112,12 @@ func (s Service) listCustomersEndpoint(c *fiber.Ctx) {
 	if err != nil {
 		s.errCh <- errors.New(ctx, err, opName)
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -121,8 +136,12 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 			"payload": payload,
 		})
 
-		// @TODO => Retornar o erro de dominio...
-		fmt.Println(err)
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
 		return
 	}
 
@@ -149,7 +168,12 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 			"payload": dutyDTO,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -166,7 +190,12 @@ func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
 	if err != nil {
 		s.errCh <- errors.New(ctx, err, opName)
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -211,7 +240,12 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 			"param": dutyIDParam,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -230,7 +264,12 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 			"payload": payload,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
 		return
 	}
 
@@ -257,7 +296,12 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 			"payload": candyDto,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -274,7 +318,12 @@ func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
 	if err != nil {
 		s.errCh <- errors.New(ctx, err, opName)
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
@@ -293,7 +342,12 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 			"payload": payload,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
 		return
 	}
 
@@ -323,7 +377,12 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 			"payload": saleDTO,
 		})
 
-		// @TODO => Retornar o erro de dominio...
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
 		return
 	}
 
