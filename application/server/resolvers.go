@@ -224,14 +224,31 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	candyDto := domain.Candy{}
-	if err := c.BodyParser(&candyDto); err != nil {
+	payload := registerCandyPayload{}
+	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
-			"payload": candyDto,
+			"payload": payload,
 		})
 
 		// @TODO => Retornar o erro de dominio...
 		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	candyDto := domain.Candy{
+		Name:  payload.Name,
+		Price: payload.Price,
 	}
 
 	candy, err := s.in.CandiesRepo.Register(ctx, candyDto)
