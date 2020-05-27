@@ -84,9 +84,9 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 		Phone: payload.Phone,
 	}
 
-	customer, err := s.in.CustomersRepo.Register(ctx, customerDTO)
-	if err != nil {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+	customer, cErr := s.in.CustomersRepo.Register(ctx, customerDTO)
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": customerDTO,
 		})
 
@@ -244,9 +244,9 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 		CandyQuantity: payload.CandyQuantity,
 	}
 
-	duty, err := s.in.DutiesRepo.Register(ctx, dutyDTO)
-	if err != nil {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+	duty, dErr := s.in.DutiesRepo.Register(ctx, dutyDTO)
+	if dErr != nil {
+		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
 			"payload": dutyDTO,
 		})
 
@@ -372,9 +372,9 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 		Price: payload.Price,
 	}
 
-	candy, err := s.in.CandiesRepo.Register(ctx, candyDto)
-	if err != nil {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+	candy, cErr := s.in.CandiesRepo.Register(ctx, candyDto)
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": candyDto,
 		})
 
@@ -453,9 +453,9 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 		PaymentMethod: domain.PaymentMethod(payload.PaymentMethod),
 	}
 
-	sale, err := s.in.SalesRepo.Register(ctx, saleDTO)
-	if err != nil {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+	sale, sErr := s.in.SalesRepo.Register(ctx, saleDTO)
+	if sErr != nil {
+		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
 			"payload": saleDTO,
 		})
 
