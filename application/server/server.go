@@ -57,8 +57,9 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
 
-	app.Post("/customer", s.registerCustomerEndpoint)
 	app.Get("/customer", s.listCustomersEndpoint)
+	app.Post("/customer", s.registerCustomerEndpoint)
+	app.Put("/customer/:id", s.updateCustomerEndpoint)
 
 	app.Get("/duty", s.listDutiesEndpoint)
 	app.Post("/duty", s.registerDutyEndpoint)

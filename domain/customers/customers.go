@@ -86,3 +86,57 @@ func (s Service) List(ctx context.Context) ([]domain.Customer, *infra.Error) {
 
 	return customers, nil
 }
+
+// Find ...
+func (s Service) Find(ctx context.Context, customerID infra.ObjectID) (*domain.Customer, *infra.Error) {
+	const opName infra.OpName = "customers.Find"
+
+	s.in.Log.Info(ctx, opName, "Fetching the customer...")
+
+	query := `
+		SELECT
+			cu.id as id,
+			cu.name as name,
+			cu.phone as phone
+		FROM
+			customers cu
+		WHERE id = $1
+	`
+
+	decoder := s.in.Db.Query(ctx, query, customerID)
+
+	customer := domain.Customer{}
+	err := decoder.Decode(ctx, &customer)
+
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	return &customer, nil
+}
+
+// Update ...
+func (s Service) Update(ctx context.Context, customerID infra.ObjectID, customerDto domain.Customer) (*domain.Customer, *infra.Error) {
+	const opName infra.OpName = "customers.Update"
+
+	query := `UPDATE customers SET name = $1, phone = $2 WHERE id = $3 RETURNING id, name, phone`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Updating a customer...", infra.Metadata{
+		"customerID": customerID,
+		"dto":        customerDto,
+	})
+
+	_, err := s.Find(ctx, customerID)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	decoder := s.in.Db.Query(ctx, query, customerDto.Name, customerDto.Phone, customerID)
+
+	customer := domain.Customer{}
+	if err := decoder.Decode(ctx, &customer); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+	}
+
+	return &customer, nil
+}

@@ -52,7 +52,7 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	payload := registerCustomerPayload{}
+	payload := customerPayload{}
 	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
 			"payload": payload,
@@ -87,6 +87,88 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	customer, err := s.in.CustomersRepo.Register(ctx, customerDTO)
 	if err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": customerDTO,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(customer)
+}
+
+func (s Service) updateCustomerEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.updateCustomerEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	customerIDParam := c.Params("id")
+	customerID, err := strconv.Atoi(customerIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": customerIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid customer id.",
+		})
+
+		return
+	}
+
+	payload := customerPayload{}
+	if err := c.BodyParser(&payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
+		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	customerDTO := domain.Customer{
+		Name:  payload.Name,
+		Phone: payload.Phone,
+	}
+
+	customer, cErr := s.in.CustomersRepo.Update(ctx, infra.ObjectID(customerID), customerDTO)
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified customer was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": customerDTO,
 		})
 

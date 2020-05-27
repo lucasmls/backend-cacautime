@@ -9,6 +9,7 @@ import (
 // CustomersRepository ...
 type CustomersRepository interface {
 	Register(context.Context, Customer) (*Customer, *infra.Error)
+	Update(context.Context, infra.ObjectID, Customer) (*Customer, *infra.Error)
 	List(context.Context) ([]Customer, *infra.Error)
 }
 
