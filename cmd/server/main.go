@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/lucasmls/backend-cacautime/application/server"
 	"github.com/lucasmls/backend-cacautime/domain/candies"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
@@ -118,6 +119,7 @@ func main() {
 		DutiesRepo:    duties,
 		CandiesRepo:   candiesR,
 		SalesRepo:     salesR,
+		Validator:     validator.New(),
 	})
 
 	if err != nil {

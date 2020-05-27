@@ -3,14 +3,45 @@ package server
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber"
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
 )
+
+func handleValidationError(payload interface{}, err error) map[string]string {
+	errorsMap := make(map[string]string)
+
+	reflected := reflect.ValueOf(payload)
+
+	for _, e := range err.(validator.ValidationErrors) {
+		field, _ := reflected.Type().FieldByName(e.StructField())
+
+		var key string
+		if key = field.Tag.Get("json"); key == "" {
+			key = strings.ToLower(e.StructField())
+		}
+
+		switch e.Tag() {
+		case "required":
+			errorsMap[key] = "The " + key + " is required."
+		case "max":
+			errorsMap[key] = "The " + key + " is bigger than the maximum expected value."
+		case "min":
+			errorsMap[key] = "The " + key + " is smaller than the minimum expected value."
+		default:
+			errorsMap[key] = "The " + key + " is invalid."
+		}
+	}
+
+	return errorsMap
+}
 
 func (s Service) pingEndpoint(c *fiber.Ctx) {
 	c.Send("pong")
@@ -22,13 +53,30 @@ func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	customerDTO := domain.Customer{}
-	if err := c.BodyParser(&customerDTO); err != nil {
+	payload := registerCustomerPayload{}
+	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
-			"payload": customerDTO,
+			"payload": payload,
 		})
 
 		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	customerDTO := domain.Customer{
+		Name:  payload.Name,
+		Phone: payload.Phone,
 	}
 
 	customer, err := s.in.CustomersRepo.Register(ctx, customerDTO)

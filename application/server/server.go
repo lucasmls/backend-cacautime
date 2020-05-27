@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/cors"
 	"github.com/gofiber/fiber"
 	requestLogger "github.com/gofiber/logger"
@@ -18,6 +19,7 @@ type ServiceInput struct {
 	DutiesRepo    domain.DutiesRepository
 	CandiesRepo   domain.CandiesRepository
 	SalesRepo     domain.SalesRepository
+	Validator     *validator.Validate
 }
 
 // Service ...
