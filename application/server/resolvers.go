@@ -115,15 +115,32 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	dutyDTO := domain.Duty{}
-	if err := c.BodyParser(&dutyDTO); err != nil {
+	payload := registerDutyPayload{}
+	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
-			"payload": dutyDTO,
+			"payload": payload,
 		})
 
 		// @TODO => Retornar o erro de dominio...
 		fmt.Println(err)
 		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	dutyDTO := domain.Duty{
+		Date:          payload.Date,
+		CandyQuantity: payload.CandyQuantity,
 	}
 
 	duty, err := s.in.DutiesRepo.Register(ctx, dutyDTO)
