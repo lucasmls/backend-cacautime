@@ -287,14 +287,34 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	saleDTO := domain.Sale{}
-	if err := c.BodyParser(&saleDTO); err != nil {
+	payload := registerSalePayload{}
+	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
-			"payload": saleDTO,
+			"payload": payload,
 		})
 
 		// @TODO => Retornar o erro de dominio...
 		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	saleDTO := domain.Sale{
+		CustomerID:    infra.ObjectID(payload.CustomerID),
+		DutyID:        infra.ObjectID(payload.DutyID),
+		CandyID:       infra.ObjectID(payload.CandyID),
+		Status:        domain.Status(payload.Status),
+		PaymentMethod: domain.PaymentMethod(payload.PaymentMethod),
 	}
 
 	sale, err := s.in.SalesRepo.Register(ctx, saleDTO)
