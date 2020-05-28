@@ -584,7 +584,7 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	payload := registerSalePayload{}
+	payload := salePayload{}
 	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
 			"payload": payload,
@@ -622,6 +622,88 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	sale, sErr := s.in.SalesRepo.Register(ctx, saleDTO)
 	if sErr != nil {
 		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
+			"payload": saleDTO,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(sale)
+}
+
+func (s Service) updateSaleEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.updateSaleEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	saleIDParam := c.Params("id")
+	saleID, err := strconv.Atoi(saleIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": saleIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid sale id.",
+		})
+
+		return
+	}
+
+	payload := updateSalePayload{}
+	if err := c.BodyParser(&payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
+		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	saleDTO := domain.Sale{
+		PaymentMethod: domain.PaymentMethod(payload.PaymentMethod),
+		Status:        domain.Status(payload.Status),
+	}
+
+	sale, cErr := s.in.SalesRepo.Update(ctx, infra.ObjectID(saleID), saleDTO)
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified sale was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": saleDTO,
 		})
 

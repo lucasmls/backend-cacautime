@@ -71,6 +71,7 @@ func (s Service) Engine(app *fiber.App) {
 	app.Put("/candy/:id", s.updateCandyEndpoint)
 
 	app.Post("/sale", s.registerSaleEndpoint)
+	app.Put("/sale/:id", s.updateSaleEndpoint)
 }
 
 // Run ...
