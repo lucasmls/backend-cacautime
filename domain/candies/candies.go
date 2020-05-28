@@ -120,9 +120,9 @@ func (s Service) Update(ctx context.Context, candyID infra.ObjectID, candyDTO do
 
 	query := `UPDATE candies SET name = $1, price = $2 WHERE id = $3 RETURNING id, name, price`
 
-	s.in.Log.InfoMetadata(ctx, opName, "Updating a customer...", infra.Metadata{
-		"dutyID": candyID,
-		"dto":    candyDTO,
+	s.in.Log.InfoMetadata(ctx, opName, "Updating a candy...", infra.Metadata{
+		"candyID": candyID,
+		"dto":     candyDTO,
 	})
 
 	_, err := s.Find(ctx, candyID)
@@ -138,4 +138,31 @@ func (s Service) Update(ctx context.Context, candyID infra.ObjectID, candyDTO do
 	}
 
 	return &candy, nil
+}
+
+// Delete ..
+func (s Service) Delete(ctx context.Context, candyID infra.ObjectID) *infra.Error {
+	const opName infra.OpName = "candies.Delete"
+
+	query := `DELETE from candies WHERE id = $1`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Deleting a candy...", infra.Metadata{
+		"candyID": candyID,
+	})
+
+	result, err := s.in.Db.Execute(ctx, query, candyID)
+	if err != nil {
+		return errors.New(ctx, opName, err)
+	}
+
+	affectedRowsCount, rErr := result.RowsAffected()
+	if rErr != nil {
+		return errors.New(ctx, opName, rErr)
+	}
+
+	if affectedRowsCount < 1 {
+		return errors.New(ctx, opName, "The candy was not found.", infra.KindNotFound)
+	}
+
+	return nil
 }

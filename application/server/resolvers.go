@@ -556,6 +556,56 @@ func (s Service) updateCandyEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(candy)
 }
 
+func (s Service) deleteCandyEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.deleteCandyEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	candyIDParam := c.Params("id")
+	candyID, err := strconv.Atoi(candyIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": candyIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid candy id.",
+		})
+
+		return
+	}
+
+	cErr := s.in.CandiesRepo.Delete(ctx, infra.ObjectID(candyID))
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"param": candyIDParam,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified candy was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"param": candyIDParam,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(map[string]string{"Message": "Candy deleted successfully!"})
+}
+
 func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.listCandiesEndpoint"
 

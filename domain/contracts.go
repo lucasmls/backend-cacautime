@@ -26,6 +26,7 @@ type CandiesRepository interface {
 	Register(context.Context, Candy) (*Candy, *infra.Error)
 	List(context.Context) ([]Candy, *infra.Error)
 	Update(context.Context, infra.ObjectID, Candy) (*Candy, *infra.Error)
+	Delete(context.Context, infra.ObjectID) *infra.Error
 }
 
 // SalesRepository ...
