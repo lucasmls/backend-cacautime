@@ -68,6 +68,7 @@ func (s Service) Engine(app *fiber.App) {
 
 	app.Get("/candy", s.listCandiesEndpoint)
 	app.Post("/candy", s.registerCandyEndpoint)
+	app.Put("/candy/:id", s.updateCandyEndpoint)
 
 	app.Post("/sale", s.registerSaleEndpoint)
 }

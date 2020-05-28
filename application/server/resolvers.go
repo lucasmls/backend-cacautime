@@ -262,6 +262,7 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 
 	c.Status(200).JSON(duty)
 }
+
 func (s Service) updateDutyEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.updateDutyEndpoint"
 
@@ -423,7 +424,7 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	payload := registerCandyPayload{}
+	payload := candyPayload{}
 	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
 			"payload": payload,
@@ -471,6 +472,88 @@ func (s Service) registerCandyEndpoint(c *fiber.Ctx) {
 	}
 
 	c.Status(200).JSON(candy)
+}
+
+func (s Service) updateCandyEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.updateCandyEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	candyIDParam := c.Params("id")
+	candyID, err := strconv.Atoi(candyIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": candyIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid candy id.",
+		})
+
+		return
+	}
+
+	payload := candyPayload{}
+	if err := c.BodyParser(&payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
+		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	candyDTO := domain.Candy{
+		Name:  payload.Name,
+		Price: payload.Price,
+	}
+
+	customer, cErr := s.in.CandiesRepo.Update(ctx, infra.ObjectID(candyID), candyDTO)
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified candy was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"payload": candyDTO,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(customer)
 }
 
 func (s Service) listCandiesEndpoint(c *fiber.Ctx) {

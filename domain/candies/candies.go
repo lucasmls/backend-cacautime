@@ -85,3 +85,57 @@ func (s Service) List(ctx context.Context) ([]domain.Candy, *infra.Error) {
 
 	return candies, nil
 }
+
+// Find ...
+func (s Service) Find(ctx context.Context, candyID infra.ObjectID) (*domain.Candy, *infra.Error) {
+	const opName infra.OpName = "candies.Find"
+
+	s.in.Log.Info(ctx, opName, "Fetching the candy...")
+
+	query := `
+		SELECT
+			ca.id as id,
+			ca.name as name,
+			ca.price as price
+		FROM
+			candies ca
+		WHERE id = $1
+	`
+
+	decoder := s.in.Db.Query(ctx, query, candyID)
+
+	candy := domain.Candy{}
+	err := decoder.Decode(ctx, &candy)
+
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	return &candy, nil
+}
+
+// Update ...
+func (s Service) Update(ctx context.Context, candyID infra.ObjectID, candyDTO domain.Candy) (*domain.Candy, *infra.Error) {
+	const opName infra.OpName = "candies.Update"
+
+	query := `UPDATE candies SET name = $1, price = $2 WHERE id = $3 RETURNING id, name, price`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Updating a customer...", infra.Metadata{
+		"dutyID": candyID,
+		"dto":    candyDTO,
+	})
+
+	_, err := s.Find(ctx, candyID)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	decoder := s.in.Db.Query(ctx, query, candyDTO.Name, candyDTO.Price, candyID)
+
+	candy := domain.Candy{}
+	if err := decoder.Decode(ctx, &candy); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+	}
+
+	return &candy, nil
+}
