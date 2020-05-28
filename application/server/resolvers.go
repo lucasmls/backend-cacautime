@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -212,7 +213,7 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	payload := registerDutyPayload{}
+	payload := dutyPayload{}
 	if err := c.BodyParser(&payload); err != nil {
 		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
 			"payload": payload,
@@ -247,6 +248,88 @@ func (s Service) registerDutyEndpoint(c *fiber.Ctx) {
 	duty, dErr := s.in.DutiesRepo.Register(ctx, dutyDTO)
 	if dErr != nil {
 		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
+			"payload": dutyDTO,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(duty)
+}
+func (s Service) updateDutyEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.updateDutyEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	dutyIDParam := c.Params("id")
+	dutyID, err := strconv.Atoi(dutyIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid duty id.",
+		})
+
+		return
+	}
+
+	payload := dutyPayload{}
+	if err := c.BodyParser(&payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
+		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	dutyDTO := domain.Duty{
+		Date:          payload.Date,
+		CandyQuantity: payload.CandyQuantity,
+	}
+
+	duty, cErr := s.in.DutiesRepo.Update(ctx, infra.ObjectID(dutyID), dutyDTO)
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		fmt.Println("here!")
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified duty was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": dutyDTO,
 		})
 

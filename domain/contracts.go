@@ -17,6 +17,7 @@ type CustomersRepository interface {
 type DutiesRepository interface {
 	List(context.Context) ([]Duty, *infra.Error)
 	Register(context.Context, Duty) (*Duty, *infra.Error)
+	Update(context.Context, infra.ObjectID, Duty) (*Duty, *infra.Error)
 	Sales(context.Context, infra.ObjectID) (*DutySales, *infra.Error)
 }
 

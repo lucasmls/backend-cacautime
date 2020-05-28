@@ -5,7 +5,7 @@ type customerPayload struct {
 	Phone string `json:"phone" validate:"required,min=8,max=11"`
 }
 
-type registerDutyPayload struct {
+type dutyPayload struct {
 	Date          string `json:"date" validate:"required"`
 	CandyQuantity int    `json:"candyQuantity" validate:"required,min=1"`
 }

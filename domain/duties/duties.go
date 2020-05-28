@@ -2,7 +2,6 @@ package duties
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -60,6 +59,32 @@ func (s Service) Register(ctx context.Context, dutyDTO domain.Duty) (*domain.Dut
 	return &duty, nil
 }
 
+// Update ...
+func (s Service) Update(ctx context.Context, dutyID infra.ObjectID, dutyDTO domain.Duty) (*domain.Duty, *infra.Error) {
+	const opName infra.OpName = "duties.Update"
+
+	query := `UPDATE duties SET date = $1, candy_quantity = $2 WHERE id = $3 RETURNING id, date, candy_quantity as candyQuantity`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Updating a customer...", infra.Metadata{
+		"dutyID": dutyID,
+		"dto":    dutyDTO,
+	})
+
+	_, err := s.Find(ctx, dutyID)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err)
+	}
+
+	decoder := s.in.Db.Query(ctx, query, dutyDTO.Date, dutyDTO.CandyQuantity, dutyID)
+
+	duty := domain.Duty{}
+	if err := decoder.Decode(ctx, &duty); err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+	}
+
+	return &duty, nil
+}
+
 // List ...
 func (s Service) List(ctx context.Context) ([]domain.Duty, *infra.Error) {
 	const opName infra.OpName = "duties.List"
@@ -110,12 +135,8 @@ func (s Service) Find(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty,
 	duty := domain.Duty{}
 	err := decoder.Decode(ctx, &duty)
 
-	if err != nil && err == sql.ErrNoRows {
-		return nil, errors.New(ctx, opName, err, infra.KindNotFound)
-	}
-
 	if err != nil {
-		return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+		return nil, errors.New(ctx, opName, err)
 	}
 
 	return &duty, nil
