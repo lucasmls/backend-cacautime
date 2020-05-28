@@ -526,7 +526,7 @@ func (s Service) updateCandyEndpoint(c *fiber.Ctx) {
 		Price: payload.Price,
 	}
 
-	customer, cErr := s.in.CandiesRepo.Update(ctx, infra.ObjectID(candyID), candyDTO)
+	candy, cErr := s.in.CandiesRepo.Update(ctx, infra.ObjectID(candyID), candyDTO)
 	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
 		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
 			"payload": payload,
@@ -553,7 +553,7 @@ func (s Service) updateCandyEndpoint(c *fiber.Ctx) {
 		return
 	}
 
-	c.Status(200).JSON(customer)
+	c.Status(200).JSON(candy)
 }
 
 func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
