@@ -65,7 +65,7 @@ func (s Service) Update(ctx context.Context, dutyID infra.ObjectID, dutyDTO doma
 
 	query := `UPDATE duties SET date = $1, candy_quantity = $2 WHERE id = $3 RETURNING id, date, candy_quantity as candyQuantity`
 
-	s.in.Log.InfoMetadata(ctx, opName, "Updating a customer...", infra.Metadata{
+	s.in.Log.InfoMetadata(ctx, opName, "Updating a duty...", infra.Metadata{
 		"dutyID": dutyID,
 		"dto":    dutyDTO,
 	})
@@ -210,4 +210,31 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 	}
 
 	return &dutySales, nil
+}
+
+// Delete ...
+func (s Service) Delete(ctx context.Context, dutyID infra.ObjectID) *infra.Error {
+	const opName infra.OpName = "duties.Delete"
+
+	query := `DELETE from duties WHERE id = $1`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Deleting a duty...", infra.Metadata{
+		"dutyID": dutyID,
+	})
+
+	result, err := s.in.Db.Execute(ctx, query, dutyID)
+	if err != nil {
+		return errors.New(ctx, opName, err)
+	}
+
+	affectedRowsCount, rErr := result.RowsAffected()
+	if rErr != nil {
+		return errors.New(ctx, opName, rErr)
+	}
+
+	if affectedRowsCount < 1 {
+		return errors.New(ctx, opName, "The duty was not found.", infra.KindNotFound)
+	}
+
+	return nil
 }

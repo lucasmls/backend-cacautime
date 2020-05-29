@@ -20,6 +20,7 @@ type DutiesRepository interface {
 	Register(context.Context, Duty) (*Duty, *infra.Error)
 	Update(context.Context, infra.ObjectID, Duty) (*Duty, *infra.Error)
 	Sales(context.Context, infra.ObjectID) (*DutySales, *infra.Error)
+	Delete(context.Context, infra.ObjectID) *infra.Error
 }
 
 // CandiesRepository ...

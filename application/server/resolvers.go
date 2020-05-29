@@ -396,6 +396,56 @@ func (s Service) updateDutyEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(duty)
 }
 
+func (s Service) deleteDutyEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.deleteDutyEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	dutyIDParam := c.Params("id")
+	dutyID, err := strconv.Atoi(dutyIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid duty id.",
+		})
+
+		return
+	}
+
+	dErr := s.in.DutiesRepo.Delete(ctx, infra.ObjectID(dutyID))
+	if dErr != nil && errors.Kind(dErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified duty was not found",
+		})
+
+		return
+	}
+
+	if dErr != nil {
+		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
+			"param": dutyIDParam,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(map[string]string{"Message": "Duty deleted successfully!"})
+}
+
 func (s Service) listDutiesEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.listDutiesEndpoint"
 
