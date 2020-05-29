@@ -35,4 +35,5 @@ type CandiesRepository interface {
 type SalesRepository interface {
 	Register(context.Context, Sale) (*Sale, *infra.Error)
 	Update(context.Context, infra.ObjectID, Sale) (*Sale, *infra.Error)
+	Delete(context.Context, infra.ObjectID) *infra.Error
 }

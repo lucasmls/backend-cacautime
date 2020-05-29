@@ -868,3 +868,53 @@ func (s Service) updateSaleEndpoint(c *fiber.Ctx) {
 
 	c.Status(200).JSON(sale)
 }
+
+func (s Service) deleteSaleEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.deleteSaleEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	saleIDParam := c.Params("id")
+	saleID, err := strconv.Atoi(saleIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": saleIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid sale id.",
+		})
+
+		return
+	}
+
+	dErr := s.in.SalesRepo.Delete(ctx, infra.ObjectID(saleID))
+	if dErr != nil && errors.Kind(dErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
+			"param": saleIDParam,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified sale was not found",
+		})
+
+		return
+	}
+
+	if dErr != nil {
+		s.errCh <- errors.New(ctx, dErr, opName, infra.Metadata{
+			"param": saleIDParam,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(map[string]string{"Message": "Sale deleted successfully!"})
+}

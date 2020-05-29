@@ -128,3 +128,30 @@ func (s Service) Update(ctx context.Context, saleID infra.ObjectID, saleDTO doma
 
 	return &sale, nil
 }
+
+// Delete ...
+func (s Service) Delete(ctx context.Context, saleID infra.ObjectID) *infra.Error {
+	const opName infra.OpName = "sales.Delete"
+
+	query := `DELETE from sales WHERE id = $1`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Deleting a sale...", infra.Metadata{
+		"saleID": saleID,
+	})
+
+	result, err := s.in.Db.Execute(ctx, query, saleID)
+	if err != nil {
+		return errors.New(ctx, opName, err)
+	}
+
+	affectedRowsCount, rErr := result.RowsAffected()
+	if rErr != nil {
+		return errors.New(ctx, opName, rErr)
+	}
+
+	if affectedRowsCount < 1 {
+		return errors.New(ctx, opName, "The sale was not found.", infra.KindNotFound)
+	}
+
+	return nil
+}

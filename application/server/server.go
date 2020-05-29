@@ -75,6 +75,7 @@ func (s Service) Engine(app *fiber.App) {
 
 	app.Post("/sale", s.registerSaleEndpoint)
 	app.Put("/sale/:id", s.updateSaleEndpoint)
+	app.Delete("/sale/:id", s.deleteSaleEndpoint)
 }
 
 // Run ...
