@@ -490,7 +490,7 @@ func (s Service) listDutySales(c *fiber.Ctx) {
 
 	dutiesSales, sErr := s.in.DutiesRepo.Sales(ctx, infra.ObjectID(dutyID))
 	if sErr != nil && errors.Kind(sErr) == infra.KindNotFound {
-		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
 			"param": dutyIDParam,
 		})
 

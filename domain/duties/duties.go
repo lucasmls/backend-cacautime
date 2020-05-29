@@ -2,6 +2,7 @@ package duties
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -150,8 +151,11 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 
 	duty, err := s.Find(ctx, dutyID)
 	if err != nil {
+		fmt.Println("bateu aqui...")
 		return nil, errors.New(ctx, opName, err)
 	}
+
+	fmt.Println("AQUI NÃO...")
 
 	query := `
 		SELECT
