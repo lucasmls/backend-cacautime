@@ -185,6 +185,56 @@ func (s Service) updateCustomerEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(customer)
 }
 
+func (s Service) deleteCustomerEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.deleteCustomerEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	customerIDParam := c.Params("id")
+	customerID, err := strconv.Atoi(customerIDParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": customerIDParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid customer id.",
+		})
+
+		return
+	}
+
+	cErr := s.in.CustomersRepo.Delete(ctx, infra.ObjectID(customerID))
+	if cErr != nil && errors.Kind(cErr) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"param": customerIDParam,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "The specified customer was not found",
+		})
+
+		return
+	}
+
+	if cErr != nil {
+		s.errCh <- errors.New(ctx, cErr, opName, infra.Metadata{
+			"param": customerIDParam,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(map[string]string{"Message": "Customer deleted successfully!"})
+}
+
 func (s Service) listCustomersEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.listCustomersEndpoint"
 

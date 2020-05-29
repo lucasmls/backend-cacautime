@@ -10,6 +10,7 @@ import (
 type CustomersRepository interface {
 	Register(context.Context, Customer) (*Customer, *infra.Error)
 	Update(context.Context, infra.ObjectID, Customer) (*Customer, *infra.Error)
+	Delete(context.Context, infra.ObjectID) *infra.Error
 	List(context.Context) ([]Customer, *infra.Error)
 }
 

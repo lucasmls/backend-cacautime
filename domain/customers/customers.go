@@ -140,3 +140,30 @@ func (s Service) Update(ctx context.Context, customerID infra.ObjectID, customer
 
 	return &customer, nil
 }
+
+// Delete ...
+func (s Service) Delete(ctx context.Context, customerID infra.ObjectID) *infra.Error {
+	const opName infra.OpName = "customers.Delete"
+
+	query := `DELETE from customers WHERE id = $1`
+
+	s.in.Log.InfoMetadata(ctx, opName, "Deleting a customer...", infra.Metadata{
+		"customerID": customerID,
+	})
+
+	result, err := s.in.Db.Execute(ctx, query, customerID)
+	if err != nil {
+		return errors.New(ctx, opName, err)
+	}
+
+	affectedRowsCount, rErr := result.RowsAffected()
+	if rErr != nil {
+		return errors.New(ctx, opName, rErr)
+	}
+
+	if affectedRowsCount < 1 {
+		return errors.New(ctx, opName, "The customer was not found.", infra.KindNotFound)
+	}
+
+	return nil
+}
