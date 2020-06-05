@@ -175,6 +175,7 @@ func (s Service) Sales(ctx context.Context, dutyID infra.ObjectID) (*domain.Duty
 			INNER JOIN candies ca ON s.candy_id = ca.id
 		WHERE
 			s.duty_id = $1
+		ORDER BY s.created_at
 	`
 
 	cursor, dbErr := s.in.Db.QueryAll(ctx, query, dutyID)
