@@ -21,7 +21,7 @@ services:
 
     restart: always
     ports:
-      - 3000:8083
+      - 8083:3000
 
     entrypoint: ./init.sh
 
