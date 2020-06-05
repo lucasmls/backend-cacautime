@@ -4,13 +4,8 @@ services:
   db:
     image: postgres:9.6
     restart: always
-
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-    ports:
-      - 5432:5432
+    env_file:
+      - .env
 
     volumes:
     - ./postgres-data:/var/lib/postgresql/data
