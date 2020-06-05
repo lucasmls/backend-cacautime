@@ -1,6 +1,6 @@
 -- Table Definition ----------------------------------------------
 CREATE TABLE duties (
-  id integer DEFAULT nextval('sales_day_id_seq'::regclass) PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   date date NOT NULL,
   candy_quantity integer NOT NULL,
   created_at timestamp without time zone NOT NULL DEFAULT now(),
