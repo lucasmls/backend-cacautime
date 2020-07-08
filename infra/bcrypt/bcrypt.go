@@ -34,9 +34,9 @@ func NewClient(in ClientInput) (*Client, *infra.Error) {
 	}, nil
 }
 
-// Generate ...
-func (c Client) Generate(ctx context.Context, value string) ([]byte, *infra.Error) {
-	const opName infra.OpName = "bcrypt.Generate"
+// Hash ...
+func (c Client) Hash(ctx context.Context, value string) ([]byte, *infra.Error) {
+	const opName infra.OpName = "bcrypt.Hash"
 
 	c.in.Log.Debug(ctx, opName, "Hashing...")
 
