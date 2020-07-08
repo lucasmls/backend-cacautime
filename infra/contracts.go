@@ -48,3 +48,9 @@ type Cursor interface {
 type Decoder interface {
 	Decode(context.Context, Entity) *Error
 }
+
+// BcryptProvider ...
+type BcryptProvider interface {
+	Generate(context.Context, string) ([]byte, *Error)
+	Compare(context.Context, string, string) *Error
+}
