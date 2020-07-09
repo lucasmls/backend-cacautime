@@ -54,3 +54,9 @@ type CryptoProvider interface {
 	Hash(context.Context, string) ([]byte, *Error)
 	Compare(context.Context, string, string) *Error
 }
+
+// TokenProvider ...
+type TokenProvider interface {
+	GenerateJWT(context.Context, string) (string, *Error)
+	ValidateJWT(context.Context, string) (*DecodedJWT, *Error)
+}

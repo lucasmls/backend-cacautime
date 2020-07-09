@@ -114,3 +114,9 @@ type MinimumValueError struct {
 func (e MinimumValueError) Error() string {
 	return fmt.Sprintf("missing value: %s - minimum required: %d", e.EnvVarName, e.MinimumRequired)
 }
+
+// DecodedJWT ...
+type DecodedJWT struct {
+	UserID string `json:"userId"`
+	Exp    int64  `json:"exp"`
+}
