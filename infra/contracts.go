@@ -57,6 +57,6 @@ type CryptoProvider interface {
 
 // TokenProvider ...
 type TokenProvider interface {
-	GenerateJWT(context.Context, string) (string, *Error)
-	ValidateJWT(context.Context, string) (*DecodedJWT, *Error)
+	Generate(context.Context, string) (string, *Error)
+	Validate(context.Context, string) (*DecodedJWT, *Error)
 }
