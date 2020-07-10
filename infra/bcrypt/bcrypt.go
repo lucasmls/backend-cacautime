@@ -49,12 +49,17 @@ func (c Client) Hash(ctx context.Context, value string) ([]byte, *infra.Error) {
 }
 
 // Compare ...
-func (c Client) Compare(ctx context.Context, value string, valueToCompare string) *infra.Error {
+func (c Client) Compare(ctx context.Context, hashedValue string, value string) *infra.Error {
 	const opName infra.OpName = "bcrypt.Compare"
 
 	c.in.Log.Debug(ctx, opName, "Comparing bcrypted values...")
 
-	if err := bcrypt.CompareHashAndPassword([]byte(value), []byte(valueToCompare)); err != nil {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedValue), []byte(value))
+	if err != nil && err.Error() == bcrypt.ErrMismatchedHashAndPassword.Error() {
+		return errors.New(ctx, opName, err, infra.KindUnauthorized)
+	}
+
+	if err != nil {
 		return errors.New(ctx, err, opName)
 	}
 
