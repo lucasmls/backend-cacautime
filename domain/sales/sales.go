@@ -2,7 +2,6 @@ package sales
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -93,8 +92,6 @@ func (s Service) Find(ctx context.Context, saleID infra.ObjectID) (*domain.Sale,
 // Update ...
 func (s Service) Update(ctx context.Context, saleID infra.ObjectID, saleDTO domain.Sale) (*domain.Sale, *infra.Error) {
 	const opName infra.OpName = "sales.Update"
-
-	fmt.Println(saleDTO)
 
 	query := `
 		UPDATE sales SET
