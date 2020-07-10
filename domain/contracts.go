@@ -11,6 +11,11 @@ type UsersRepository interface {
 	FindByEmail(context.Context, string) (*User, *infra.Error)
 }
 
+// AuthRepository ...
+type AuthRepository interface {
+	Login(context.Context, string, string) (string, *infra.Error)
+}
+
 // CustomersRepository ...
 type CustomersRepository interface {
 	Register(context.Context, Customer) (*Customer, *infra.Error)
