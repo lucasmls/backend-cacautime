@@ -5,15 +5,20 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/lucasmls/backend-cacautime/application/server"
+	"github.com/lucasmls/backend-cacautime/domain/auth"
 	"github.com/lucasmls/backend-cacautime/domain/candies"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
 	"github.com/lucasmls/backend-cacautime/domain/duties"
 	"github.com/lucasmls/backend-cacautime/domain/sales"
+	"github.com/lucasmls/backend-cacautime/domain/users"
 	"github.com/lucasmls/backend-cacautime/infra"
+	"github.com/lucasmls/backend-cacautime/infra/bcrypt"
 	"github.com/lucasmls/backend-cacautime/infra/errors"
+	"github.com/lucasmls/backend-cacautime/infra/jwt"
 	"github.com/lucasmls/backend-cacautime/infra/log"
 	"github.com/lucasmls/backend-cacautime/infra/postgres"
 )
@@ -73,6 +78,27 @@ func main() {
 		return
 	}
 
+	bcrypt, err := bcrypt.NewClient(bcrypt.ClientInput{
+		Log: log,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
+	jwt, err := jwt.NewClient(jwt.ClientInput{
+		Log: log,
+		// @TODO => Put this value into a environment variable
+		Secret: "secret_secret",
+		TTL:    time.Now().Add(time.Minute * 30).Unix(),
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	customers, err := customers.NewService(customers.ServiceInput{
 		Db:  postgres,
 		Log: log,
@@ -113,12 +139,36 @@ func main() {
 		return
 	}
 
+	usersR, err := users.NewService(users.ServiceInput{
+		Log: log,
+		Db:  postgres,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
+	authR, err := auth.NewService(auth.ServiceInput{
+		Log:    log,
+		Users:  usersR,
+		Crypto: bcrypt,
+		JWT:    jwt,
+	})
+
+	if err != nil {
+		errors.Log(log, err)
+		return
+	}
+
 	s, err := server.NewService(server.ServiceInput{
 		Log:           log,
 		CustomersRepo: customers,
 		DutiesRepo:    duties,
 		CandiesRepo:   candiesR,
 		SalesRepo:     salesR,
+		UsersRepo:     usersR,
+		AuthRepo:      authR,
 		Validator:     validator.New(),
 	})
 

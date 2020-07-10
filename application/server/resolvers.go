@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -45,6 +44,85 @@ func handleValidationError(payload interface{}, err error) map[string]string {
 
 func (s Service) pingEndpoint(c *fiber.Ctx) {
 	c.Send("pong")
+}
+
+func (s Service) login(c *fiber.Ctx) {
+	const opName infra.OpName = "server.login"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	payload := loginPayload{}
+	if err := c.BodyParser(&payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		c.Status(422).JSON(
+			map[string]string{
+				"message": "Invalid payload.",
+			},
+		)
+
+		return
+	}
+
+	if err := s.in.Validator.Struct(payload); err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"payload": payload,
+		})
+
+		response := handleValidationError(payload, err)
+
+		c.Status(422).JSON(response)
+
+		return
+	}
+
+	token, err := s.in.AuthRepo.Login(ctx, payload.Email, payload.Password)
+	if err != nil && errors.Kind(err) == infra.KindNotFound {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"email": payload.Email,
+		})
+
+		c.Status(404).JSON(map[string]interface{}{
+			"message": "User not found",
+		})
+
+		return
+	}
+
+	if err != nil && errors.Kind(err) == infra.KindUnauthorized {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"email": payload.Email,
+		})
+
+		c.Status(401).JSON(map[string]interface{}{
+			"message": "Wrong e-mail or password",
+		})
+
+		return
+	}
+
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"email": payload.Email,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(
+		map[string]string{
+			"token": token,
+		},
+	)
 }
 
 func (s Service) registerCustomerEndpoint(c *fiber.Ctx) {
@@ -371,7 +449,6 @@ func (s Service) updateDutyEndpoint(c *fiber.Ctx) {
 			"payload": payload,
 		})
 
-		fmt.Println("here!")
 		c.Status(404).JSON(map[string]interface{}{
 			"message": "The specified duty was not found",
 		})

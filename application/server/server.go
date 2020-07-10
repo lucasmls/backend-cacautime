@@ -19,6 +19,8 @@ type ServiceInput struct {
 	DutiesRepo    domain.DutiesRepository
 	CandiesRepo   domain.CandiesRepository
 	SalesRepo     domain.SalesRepository
+	UsersRepo     domain.UsersRepository
+	AuthRepo      domain.AuthRepository
 	Validator     *validator.Validate
 }
 
@@ -56,6 +58,8 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 // Engine ...
 func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
+
+	app.Post("/login", s.login)
 
 	app.Get("/customer", s.listCustomersEndpoint)
 	app.Post("/customer", s.registerCustomerEndpoint)

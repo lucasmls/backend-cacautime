@@ -1,5 +1,10 @@
 package server
 
+type loginPayload struct {
+	Email    string `json:"email" validate:"required,min=2,max=40"`
+	Password string `json:"password" validate:"required,min=3,max=100"`
+}
+
 type customerPayload struct {
 	Name  string `json:"name" validate:"required,min=2,max=40"`
 	Phone string `json:"phone" validate:"required,min=8,max=11"`
