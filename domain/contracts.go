@@ -6,6 +6,11 @@ import (
 	"github.com/lucasmls/backend-cacautime/infra"
 )
 
+// UsersRepository ...
+type UsersRepository interface {
+	FindByEmail(context.Context, string) (*User, *infra.Error)
+}
+
 // CustomersRepository ...
 type CustomersRepository interface {
 	Register(context.Context, Customer) (*Customer, *infra.Error)
