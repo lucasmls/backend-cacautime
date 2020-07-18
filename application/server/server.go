@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/cors"
 	"github.com/gofiber/fiber"
+	jwtware "github.com/gofiber/jwt"
 	requestLogger "github.com/gofiber/logger"
 	"github.com/lucasmls/backend-cacautime/domain"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -60,6 +61,11 @@ func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
 
 	app.Post("/login", s.login)
+
+	// JWT Middleware
+	app.Use(jwtware.New(jwtware.Config{
+		SigningKey: []byte("secret_secret"),
+	}))
 
 	app.Get("/customer", s.listCustomersEndpoint)
 	app.Post("/customer", s.registerCustomerEndpoint)
