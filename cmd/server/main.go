@@ -91,7 +91,7 @@ func main() {
 		Log: log,
 		// @TODO => Put this value into a environment variable
 		Secret: "secret_secret",
-		TTL:    time.Now().Add(time.Minute * 30).Unix(),
+		TTL:    time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	if err != nil {
