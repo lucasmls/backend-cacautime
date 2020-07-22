@@ -7,7 +7,7 @@ type loginPayload struct {
 
 type customerPayload struct {
 	Name  string `json:"name" validate:"required,min=2,max=40"`
-	Phone string `json:"phone" validate:"required,min=8,max=11"`
+	Phone string `json:"phone" validate:"max=11"`
 }
 
 type dutyPayload struct {
@@ -16,7 +16,7 @@ type dutyPayload struct {
 }
 
 type candyPayload struct {
-	Name  string `json:"name" validate:"required,min=3,max=40"`
+	Name  string `json:"name" validate:"required,min=3,max=100"`
 	Price int    `json:"price" validate:"required,min=2"`
 }
 
