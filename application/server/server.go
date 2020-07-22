@@ -23,6 +23,7 @@ type ServiceInput struct {
 	UsersRepo     domain.UsersRepository
 	AuthRepo      domain.AuthRepository
 	Validator     *validator.Validate
+	JwtSecret     string
 }
 
 // Service ...
@@ -50,6 +51,11 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
+	if in.JwtSecret == "" {
+		err := infra.MissingDependencyError{DependencyName: "JwtSecret"}
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
 	return &Service{
 		in:    in,
 		errCh: make(chan *infra.Error),
@@ -64,7 +70,7 @@ func (s Service) Engine(app *fiber.App) {
 
 	// JWT Middleware
 	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: []byte("secret_secret"),
+		SigningKey: []byte(s.in.JwtSecret),
 	}))
 
 	app.Get("/customer", s.listCustomersEndpoint)

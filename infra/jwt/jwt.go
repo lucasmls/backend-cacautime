@@ -3,6 +3,7 @@ package jwt
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -13,7 +14,7 @@ import (
 type ClientInput struct {
 	Log    infra.LogProvider
 	Secret string
-	TTL    int64
+	TTL    int
 }
 
 // Client ...
@@ -53,7 +54,7 @@ func (c Client) Generate(ctx context.Context, userID string) (string, *infra.Err
 	claims := jwtInstance.Claims.(jwt.MapClaims)
 
 	claims["userID"] = userID
-	claims["exp"] = c.in.TTL
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(c.in.TTL)).Unix()
 
 	token, err := jwtInstance.SignedString([]byte(c.in.Secret))
 	if err != nil {

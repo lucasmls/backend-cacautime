@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/lucasmls/backend-cacautime/application/server"
@@ -28,6 +27,8 @@ type config struct {
 	logLevel             string
 	dbConnectionString   string
 	dbMaxConnectionsOpen int
+	jwtSecret            string
+	jwtExpirationInHours int
 }
 
 func env() (*config, *infra.Error) {
@@ -36,6 +37,7 @@ func env() (*config, *infra.Error) {
 	c := &config{
 		goEnv:              infra.Environment(os.Getenv("GO_ENV")),
 		dbConnectionString: os.Getenv("DB_CONNECTION_STRING"),
+		jwtSecret:          os.Getenv("JWT_SECRET"),
 	}
 
 	dbMaxConnectionsOpen, err := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS_OPEN"))
@@ -44,6 +46,13 @@ func env() (*config, *infra.Error) {
 	}
 
 	c.dbMaxConnectionsOpen = dbMaxConnectionsOpen
+
+	jwtExpirationInHours, err := strconv.Atoi(os.Getenv("JWT_EXPIRATION_IN_HOURS"))
+	if err != nil {
+		return nil, errors.New(err, opName, infra.KindBadRequest)
+	}
+
+	c.jwtExpirationInHours = jwtExpirationInHours
 
 	return c, nil
 }
@@ -88,10 +97,9 @@ func main() {
 	}
 
 	jwt, err := jwt.NewClient(jwt.ClientInput{
-		Log: log,
-		// @TODO => Put this value into a environment variable
-		Secret: "secret_secret",
-		TTL:    time.Now().Add(time.Hour * 24).Unix(),
+		Log:    log,
+		Secret: env.jwtSecret,
+		TTL:    env.jwtExpirationInHours,
 	})
 
 	if err != nil {
@@ -170,6 +178,7 @@ func main() {
 		UsersRepo:     usersR,
 		AuthRepo:      authR,
 		Validator:     validator.New(),
+		JwtSecret:     env.jwtSecret,
 	})
 
 	if err != nil {
