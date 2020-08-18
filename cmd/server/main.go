@@ -11,7 +11,6 @@ import (
 	"github.com/lucasmls/backend-cacautime/domain/auth"
 	"github.com/lucasmls/backend-cacautime/domain/candies"
 	"github.com/lucasmls/backend-cacautime/domain/customers"
-	"github.com/lucasmls/backend-cacautime/domain/duties"
 	"github.com/lucasmls/backend-cacautime/domain/sales"
 	"github.com/lucasmls/backend-cacautime/domain/users"
 	"github.com/lucasmls/backend-cacautime/infra"
@@ -118,16 +117,6 @@ func main() {
 		return
 	}
 
-	duties, err := duties.NewService(duties.ServiceInput{
-		Log: log,
-		Db:  postgres,
-	})
-
-	if err != nil {
-		errors.Log(log, err)
-		return
-	}
-
 	candiesR, err := candies.NewService(candies.ServiceInput{
 		Db:  postgres,
 		Log: log,
@@ -173,7 +162,6 @@ func main() {
 	s, err := server.NewService(server.ServiceInput{
 		Log:           log,
 		CustomersRepo: customers,
-		DutiesRepo:    duties,
 		CandiesRepo:   candiesR,
 		SalesRepo:     salesR,
 		UsersRepo:     usersR,

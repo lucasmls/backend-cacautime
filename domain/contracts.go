@@ -24,15 +24,6 @@ type CustomersRepository interface {
 	List(context.Context) ([]Customer, *infra.Error)
 }
 
-// DutiesRepository ...
-type DutiesRepository interface {
-	List(context.Context) ([]Duty, *infra.Error)
-	Register(context.Context, Duty) (*Duty, *infra.Error)
-	Update(context.Context, infra.ObjectID, Duty) (*Duty, *infra.Error)
-	Sales(context.Context, infra.ObjectID) (*DutySales, *infra.Error)
-	Delete(context.Context, infra.ObjectID) *infra.Error
-}
-
 // CandiesRepository ...
 type CandiesRepository interface {
 	Register(context.Context, Candy) (*Candy, *infra.Error)

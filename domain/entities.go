@@ -19,13 +19,6 @@ type Customer struct {
 	Phone string         `json:"phone"`
 }
 
-// Duty ...
-type Duty struct {
-	ID            infra.ObjectID `json:"id"`
-	Date          string         `json:"date"`
-	CandyQuantity int            `json:"candyQuantity"`
-}
-
 // Candy ...
 type Candy struct {
 	ID    infra.ObjectID `json:"id"`
@@ -37,7 +30,6 @@ type Candy struct {
 type Sale struct {
 	ID            infra.ObjectID `json:"id"`
 	CustomerID    infra.ObjectID `json:"customerId"`
-	DutyID        infra.ObjectID `json:"dutyId"`
 	CandyID       infra.ObjectID `json:"candyId"`
 	Status        Status         `json:"status"`
 	PaymentMethod PaymentMethod  `json:"paymentMethod"`

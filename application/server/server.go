@@ -17,7 +17,6 @@ import (
 type ServiceInput struct {
 	Log           infra.LogProvider
 	CustomersRepo domain.CustomersRepository
-	DutiesRepo    domain.DutiesRepository
 	CandiesRepo   domain.CandiesRepository
 	SalesRepo     domain.SalesRepository
 	UsersRepo     domain.UsersRepository
@@ -43,11 +42,6 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 
 	if in.CustomersRepo == nil {
 		err := infra.MissingDependencyError{DependencyName: "CustomersRepo"}
-		return nil, errors.New(err, opName, infra.KindBadRequest)
-	}
-
-	if in.DutiesRepo == nil {
-		err := infra.MissingDependencyError{DependencyName: "DutiesRepo"}
 		return nil, errors.New(err, opName, infra.KindBadRequest)
 	}
 
@@ -77,12 +71,6 @@ func (s Service) Engine(app *fiber.App) {
 	app.Post("/customer", s.registerCustomerEndpoint)
 	app.Put("/customer/:id", s.updateCustomerEndpoint)
 	app.Delete("/customer/:id", s.deleteCustomerEndpoint)
-
-	app.Get("/duty", s.listDutiesEndpoint)
-	app.Post("/duty", s.registerDutyEndpoint)
-	app.Put("/duty/:id", s.updateDutyEndpoint)
-	app.Get("/duty/:id/sales", s.listDutySales)
-	app.Delete("/duty/:id", s.deleteDutyEndpoint)
 
 	app.Get("/candy", s.listCandiesEndpoint)
 	app.Post("/candy", s.registerCandyEndpoint)

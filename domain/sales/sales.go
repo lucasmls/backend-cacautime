@@ -42,13 +42,13 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Register(ctx context.Context, saleDTO domain.Sale) (*domain.Sale, *infra.Error) {
 	const opName infra.OpName = "sales.Register"
 
-	query := `INSERT INTO sales (customer_id, duty_id, candy_id, status, payment_method) values ($1, $2, $3, $4, $5) RETURNING id, customer_id as customerId, duty_id as dutyId, candy_id as candyId, status, payment_method as paymentMethod`
+	query := "INSERT INTO sales (customer_id, candy_id, status, payment_method) values ($1, $2, $3, $4) RETURNING id, customer_id as customerId, candy_id as candyId, status, payment_method as paymentMethod"
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new sale...", infra.Metadata{
 		"sale": saleDTO,
 	})
 
-	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.DutyID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod)
+	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod)
 	sale := domain.Sale{}
 
 	if err := decoder.Decode(ctx, &sale); err != nil {
@@ -68,7 +68,6 @@ func (s Service) Find(ctx context.Context, saleID infra.ObjectID) (*domain.Sale,
 		SELECT
 			sa.id as id,
 			sa.customer_id as customerId,
-			sa.duty_id as dutyId,
 			sa.candy_id as candyId,
 			sa.payment_method as paymentMethod,
 			sa.status as status
@@ -100,7 +99,6 @@ func (s Service) Update(ctx context.Context, saleID infra.ObjectID, saleDTO doma
 		WHERE id = $3 RETURNING
 			id,
 			customer_id as customerId,
-			duty_id as dutyId,
 			candy_id as candyId,
 			status,
 			payment_method as paymentMethod
