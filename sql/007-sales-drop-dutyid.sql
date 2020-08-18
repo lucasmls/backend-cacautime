@@ -1,0 +1,1 @@
+alter table sales drop column duty_id;
