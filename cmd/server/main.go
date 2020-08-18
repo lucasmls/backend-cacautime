@@ -38,6 +38,7 @@ func env() (*config, *infra.Error) {
 		goEnv:              infra.Environment(os.Getenv("GO_ENV")),
 		dbConnectionString: os.Getenv("DB_CONNECTION_STRING"),
 		jwtSecret:          os.Getenv("JWT_SECRET"),
+		logLevel:           os.Getenv("LOG_LEVEL"),
 	}
 
 	dbMaxConnectionsOpen, err := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS_OPEN"))
