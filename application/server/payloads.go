@@ -20,6 +20,7 @@ type salePayload struct {
 	CandyID       int    `json:"candyId" validate:"required,min=1"`
 	Status        string `json:"status" validate:"required,oneof=paid not_paid"`
 	PaymentMethod string `json:"paymentMethod" validate:"required,oneof=money transfer scheduled"`
+	Date          string `json:"date" validate:"required"`
 }
 
 type updateSalePayload struct {

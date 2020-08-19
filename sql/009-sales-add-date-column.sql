@@ -1,0 +1,1 @@
+ALTER TABLE sales add COLUMN date date NOT NULL;

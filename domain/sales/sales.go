@@ -42,13 +42,13 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Register(ctx context.Context, saleDTO domain.Sale) (*domain.Sale, *infra.Error) {
 	const opName infra.OpName = "sales.Register"
 
-	query := "INSERT INTO sales (customer_id, candy_id, status, payment_method) values ($1, $2, $3, $4) RETURNING id, customer_id as customerId, candy_id as candyId, status, payment_method as paymentMethod"
+	query := "INSERT INTO sales (customer_id, candy_id, status, payment_method, date) values ($1, $2, $3, $4, $5) RETURNING id, customer_id as customerId, candy_id as candyId, status, payment_method as paymentMethod, date as date"
 
 	s.in.Log.InfoMetadata(ctx, opName, "Registering a new sale...", infra.Metadata{
 		"sale": saleDTO,
 	})
 
-	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod)
+	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod, saleDTO.Date)
 	sale := domain.Sale{}
 
 	if err := decoder.Decode(ctx, &sale); err != nil {
