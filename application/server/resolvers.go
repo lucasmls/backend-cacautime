@@ -545,6 +545,28 @@ func (s Service) listCandiesEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(candies)
 }
 
+func (s Service) listMonthsThatHasSalesEndpoint(c *fiber.Ctx) {
+	const opName infra.OpName = "server.listMonthsThatHasSalesEndpoint"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	months, err := s.in.SalesRepo.Months(ctx)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName)
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(months)
+}
+
 func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.registerSaleEndpoint"
 
@@ -583,6 +605,7 @@ func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 		CandyID:       infra.ObjectID(payload.CandyID),
 		Status:        domain.Status(payload.Status),
 		PaymentMethod: domain.PaymentMethod(payload.PaymentMethod),
+		Date:          payload.Date,
 	}
 
 	sale, sErr := s.in.SalesRepo.Register(ctx, saleDTO)

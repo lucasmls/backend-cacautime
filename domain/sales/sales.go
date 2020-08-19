@@ -150,3 +150,43 @@ func (s Service) Delete(ctx context.Context, saleID infra.ObjectID) *infra.Error
 
 	return nil
 }
+
+// Months ...
+func (s Service) Months(ctx context.Context) ([]domain.Month, *infra.Error) {
+	const opName infra.OpName = "sales.Months"
+
+	query := `
+		WITH months_with_sales AS (
+			SELECT 
+				trim(to_char(date, 'Month')) as month,
+				trim(to_char(date, 'MM')) as monthNumber,
+				trim(to_char(date, 'YYYY')) as year
+			FROM sales
+			GROUP BY 1, 2, 3
+		)
+		SELECT month, year
+		FROM months_with_sales
+		ORDER BY date(concat('01/', monthNumber, '/', year)) DESC;`
+
+	s.in.Log.Info(ctx, opName, "Listing months that has sales...")
+
+	cursor, err := s.in.Db.QueryAll(ctx, query)
+	if err != nil {
+		return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+	}
+
+	defer cursor.Close(ctx)
+
+	var months []domain.Month
+
+	for cursor.Next(ctx) {
+		group := domain.Month{}
+		if err := cursor.Decode(ctx, &group); err != nil {
+			return nil, errors.New(ctx, opName, err, infra.KindUnexpected)
+		}
+
+		months = append(months, group)
+	}
+
+	return months, nil
+}

@@ -35,3 +35,9 @@ type Sale struct {
 	PaymentMethod PaymentMethod  `json:"paymentMethod"`
 	Date          string         `json:"date"`
 }
+
+// Month ...
+type Month struct {
+	Month string `json:"month"`
+	Year  string `json:"year"`
+}
