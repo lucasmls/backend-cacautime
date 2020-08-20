@@ -38,6 +38,7 @@ type Sale struct {
 
 // Month ...
 type Month struct {
-	Month string `json:"month"`
-	Year  string `json:"year"`
+	Month  string `json:"month"`
+	Year   string `json:"year"`
+	Number string `json:"number"`
 }

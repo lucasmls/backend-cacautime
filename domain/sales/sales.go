@@ -159,14 +159,14 @@ func (s Service) Months(ctx context.Context) ([]domain.Month, *infra.Error) {
 		WITH months_with_sales AS (
 			SELECT 
 				trim(to_char(date, 'Month')) as month,
-				trim(to_char(date, 'MM')) as monthNumber,
+				trim(to_char(date, 'MM')) as number,
 				trim(to_char(date, 'YYYY')) as year
 			FROM sales
 			GROUP BY 1, 2, 3
 		)
-		SELECT month, year
+		SELECT *
 		FROM months_with_sales
-		ORDER BY date(concat('01/', monthNumber, '/', year)) DESC;`
+		ORDER BY date(concat('01/', number, '/', year)) DESC;`
 
 	s.in.Log.Info(ctx, opName, "Listing months that has sales...")
 
