@@ -38,4 +38,5 @@ type SalesRepository interface {
 	Update(context.Context, infra.ObjectID, Sale) (*Sale, *infra.Error)
 	Delete(context.Context, infra.ObjectID) *infra.Error
 	Months(context.Context) ([]Month, *infra.Error)
+	MonthSales(context.Context, int, int) (*MonthSales, *infra.Error)
 }

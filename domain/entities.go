@@ -42,3 +42,26 @@ type Month struct {
 	Year   string `json:"year"`
 	Number string `json:"number"`
 }
+
+// MonthSale ...
+type MonthSale struct {
+	ID            infra.ObjectID `json:"id"`
+	Status        Status         `json:"status"`
+	PaymentMethod PaymentMethod  `json:"paymentMethod"`
+
+	CandyID    infra.ObjectID `json:"candyId"`
+	CandyName  string         `json:"candyName"`
+	CandyPrice int            `json:"candyPrice"`
+
+	CustomerID   infra.ObjectID `json:"customerId"`
+	CustomerName string         `json:"customerName"`
+}
+
+// MonthSales ...
+type MonthSales struct {
+	Subtotal        int `json:"subtotal"`
+	PaidAmount      int `json:"paidAmount"`
+	ScheduledAmount int `json:"scheduledAmount"`
+
+	Sales []MonthSale `json:"sales"`
+}

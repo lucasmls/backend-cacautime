@@ -567,6 +567,59 @@ func (s Service) listMonthsThatHasSalesEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(months)
 }
 
+func (s Service) listMonthSales(c *fiber.Ctx) {
+	const opName infra.OpName = "server.listMonthSales"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	monthParam := c.Params("month")
+	month, err := strconv.Atoi(monthParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": monthParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid month.",
+		})
+
+		return
+	}
+
+	yearParam := c.Params("year")
+	year, err := strconv.Atoi(yearParam)
+	if err != nil {
+		s.errCh <- errors.New(ctx, err, opName, infra.Metadata{
+			"param": yearParam,
+		})
+
+		c.Status(422).JSON(map[string]interface{}{
+			"message": "Invalid year.",
+		})
+
+		return
+	}
+
+	monthSales, sErr := s.in.SalesRepo.MonthSales(ctx, month, year)
+	if sErr != nil {
+		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
+			"monthParam": monthParam,
+			"yearParam": yearParam,
+		})
+
+		c.Status(500).JSON(
+			map[string]string{
+				"message": "Internal server error.",
+			},
+		)
+
+		return
+	}
+
+	c.Status(200).JSON(monthSales)
+}
+
 func (s Service) registerSaleEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.registerSaleEndpoint"
 

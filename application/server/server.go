@@ -81,6 +81,7 @@ func (s Service) Engine(app *fiber.App) {
 	app.Put("/sale/:id", s.updateSaleEndpoint)
 	app.Delete("/sale/:id", s.deleteSaleEndpoint)
 	app.Get("/sale/months", s.listMonthsThatHasSalesEndpoint)
+	app.Get("/sale/:month/:year", s.listMonthSales)
 }
 
 // Run ...

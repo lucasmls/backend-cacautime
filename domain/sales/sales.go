@@ -190,3 +190,64 @@ func (s Service) Months(ctx context.Context) ([]domain.Month, *infra.Error) {
 
 	return months, nil
 }
+
+func (s Service) MonthSales(ctx context.Context, month int, year int) (*domain.MonthSales, *infra.Error) {
+	const opName infra.OpName = "sales.MonthSales"
+
+	s.in.Log.Info(ctx, opName, "Fetching the month sales")
+
+	query := `
+		SELECT
+			s.id as id,
+			s.status as status,
+			s.payment_method as paymentMethod,
+			
+			cu.id as customerId,
+			cu.name as customerName,
+		
+			ca.id as candyId,
+			ca.name as candyName,
+			ca.price as candyPrice
+		FROM
+			sales s
+			INNER JOIN customers cu ON s.customer_id = cu.id
+			INNER JOIN candies ca ON s.candy_id = ca.id
+		WHERE
+			EXTRACT(MONTH FROM s.date) = $1 and EXTRACT(YEAR FROM s.date) = $2
+		ORDER BY s.created_at;
+	`
+	
+	cursor, dbErr := s.in.Db.QueryAll(ctx, query, month, year)
+	if dbErr != nil {
+		return nil, errors.New(ctx, opName, dbErr, infra.KindBadRequest)
+	}
+	
+	defer  cursor.Close(ctx)
+	
+	monthSales := domain.MonthSales{
+		Subtotal:        0,
+		PaidAmount:      0,
+		ScheduledAmount: 0,
+		Sales:           []domain.MonthSale{},
+	}
+
+	for cursor.Next(ctx) {
+		sale := domain.MonthSale{}
+		if err := cursor.Decode(ctx, &sale); err != nil {
+			return nil, errors.New(ctx, opName, err, infra.KindBadRequest)
+		}
+
+		monthSales.Sales = append(monthSales.Sales, sale)
+		monthSales.Subtotal += sale.CandyPrice
+
+		if sale.Status == domain.Paid {
+			monthSales.PaidAmount += sale.CandyPrice
+		}
+
+		if sale.Status == domain.NotPaid {
+			monthSales.ScheduledAmount += sale.CandyPrice
+		}
+	}
+
+	return &monthSales, nil
+}
