@@ -46,7 +46,7 @@ func (s Service) pingEndpoint(c *fiber.Ctx) {
 	c.Send("pong")
 }
 
-func (s Service) login(c *fiber.Ctx) {
+func (s Service) loginEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.login"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
@@ -567,7 +567,7 @@ func (s Service) listMonthsThatHasSalesEndpoint(c *fiber.Ctx) {
 	c.Status(200).JSON(months)
 }
 
-func (s Service) listMonthSales(c *fiber.Ctx) {
+func (s Service) listMonthSalesEndpoint(c *fiber.Ctx) {
 	const opName infra.OpName = "server.listMonthSales"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
@@ -605,7 +605,7 @@ func (s Service) listMonthSales(c *fiber.Ctx) {
 	if sErr != nil {
 		s.errCh <- errors.New(ctx, sErr, opName, infra.Metadata{
 			"monthParam": monthParam,
-			"yearParam": yearParam,
+			"yearParam":  yearParam,
 		})
 
 		c.Status(500).JSON(

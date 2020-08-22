@@ -60,7 +60,7 @@ func NewService(in ServiceInput) (*Service, *infra.Error) {
 func (s Service) Engine(app *fiber.App) {
 	app.Get("/ping", s.pingEndpoint)
 
-	app.Post("/login", s.login)
+	app.Post("/login", s.loginEndpoint)
 
 	// JWT Middleware
 	app.Use(jwtware.New(jwtware.Config{
@@ -81,7 +81,7 @@ func (s Service) Engine(app *fiber.App) {
 	app.Put("/sale/:id", s.updateSaleEndpoint)
 	app.Delete("/sale/:id", s.deleteSaleEndpoint)
 	app.Get("/sale/months", s.listMonthsThatHasSalesEndpoint)
-	app.Get("/sale/:month/:year", s.listMonthSales)
+	app.Get("/sale/:month/:year", s.listMonthSalesEndpoint)
 }
 
 // Run ...

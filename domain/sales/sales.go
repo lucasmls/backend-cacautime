@@ -216,14 +216,14 @@ func (s Service) MonthSales(ctx context.Context, month int, year int) (*domain.M
 			EXTRACT(MONTH FROM s.date) = $1 and EXTRACT(YEAR FROM s.date) = $2
 		ORDER BY s.created_at;
 	`
-	
+
 	cursor, dbErr := s.in.Db.QueryAll(ctx, query, month, year)
 	if dbErr != nil {
 		return nil, errors.New(ctx, opName, dbErr, infra.KindBadRequest)
 	}
-	
-	defer  cursor.Close(ctx)
-	
+
+	defer cursor.Close(ctx)
+
 	monthSales := domain.MonthSales{
 		Subtotal:        0,
 		PaidAmount:      0,
