@@ -48,6 +48,11 @@ func (s Service) Register(ctx context.Context, saleDTO domain.Sale) (*domain.Sal
 		"sale": saleDTO,
 	})
 
+	s.in.Log.DebugMetadata(ctx, opName, "Registering a new sale...", infra.Metadata{
+		"sale":  saleDTO,
+		"query": query,
+	})
+
 	decoder := s.in.Db.Query(ctx, query, saleDTO.CustomerID, saleDTO.CandyID, saleDTO.Status, saleDTO.PaymentMethod, saleDTO.Date)
 	sale := domain.Sale{}
 
@@ -70,7 +75,8 @@ func (s Service) Find(ctx context.Context, saleID infra.ObjectID) (*domain.Sale,
 			sa.customer_id as customerId,
 			sa.candy_id as candyId,
 			sa.payment_method as paymentMethod,
-			sa.status as status
+			sa.status as status,
+			sa.date::text as date
 		FROM
 			sales sa
 		WHERE id = $1
@@ -101,6 +107,7 @@ func (s Service) Update(ctx context.Context, saleID infra.ObjectID, saleDTO doma
 			customer_id as customerId,
 			candy_id as candyId,
 			status,
+			date::text,
 			payment_method as paymentMethod
 	`
 
@@ -191,6 +198,7 @@ func (s Service) Months(ctx context.Context) ([]domain.Month, *infra.Error) {
 	return months, nil
 }
 
+// MonthSales ...
 func (s Service) MonthSales(ctx context.Context, month int, year int) (*domain.MonthSales, *infra.Error) {
 	const opName infra.OpName = "sales.MonthSales"
 
