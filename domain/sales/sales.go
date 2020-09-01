@@ -209,6 +209,7 @@ func (s Service) MonthSales(ctx context.Context, month int, year int) (*domain.M
 			s.id as id,
 			s.status as status,
 			s.payment_method as paymentMethod,
+			trim(to_char(s.date, 'DD/MM/YYYY')) as date,
 			
 			cu.id as customerId,
 			cu.name as customerName,

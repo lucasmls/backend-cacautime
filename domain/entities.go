@@ -48,6 +48,7 @@ type MonthSale struct {
 	ID            infra.ObjectID `json:"id"`
 	Status        Status         `json:"status"`
 	PaymentMethod PaymentMethod  `json:"paymentMethod"`
+	Date          string         `json:"date"`
 
 	CandyID    infra.ObjectID `json:"candyId"`
 	CandyName  string         `json:"candyName"`
