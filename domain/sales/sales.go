@@ -184,7 +184,7 @@ func (s Service) Months(ctx context.Context) ([]domain.Month, *infra.Error) {
 
 	defer cursor.Close(ctx)
 
-	var months []domain.Month
+	months := []domain.Month{}
 
 	for cursor.Next(ctx) {
 		group := domain.Month{}
